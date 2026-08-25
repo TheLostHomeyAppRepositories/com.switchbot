@@ -222,9 +222,27 @@
 		}
 
 		.log-settings-summary {
+			display: grid;
+			grid-template-columns: 40px minmax(0, 1fr);
+			align-items: center;
+			gap: 10px;
 			min-width: 0;
 			font-size: 90%;
 			line-height: 1.5;
+		}
+
+		.log-settings-summary.no-icon {
+			display: block;
+		}
+
+		.log-settings-summary-icon {
+			width: 40px;
+			height: 40px;
+			object-fit: contain;
+		}
+
+		.log-settings-summary-text {
+			min-width: 0;
 			white-space: pre-line;
 		}
 
@@ -271,6 +289,89 @@
 			justify-content: flex-end;
 			gap: 8px;
 			margin-top: 18px;
+		}
+
+		.log-filter-value-select {
+			display: none;
+		}
+
+		.log-filter-value-list {
+			display: grid;
+			gap: 4px;
+			max-height: 220px;
+			overflow-y: auto;
+			padding: 4px;
+			border: 1px solid rgba(0, 0, 0, 0.12);
+			border-radius: 6px;
+			background: #ffffff;
+		}
+
+		.log-filter-value-item {
+			display: grid;
+			grid-template-columns: 32px minmax(0, 1fr) 24px;
+			align-items: center;
+			gap: 10px;
+			width: 100%;
+			min-height: 40px;
+			padding: 4px 8px;
+			border: 1px solid transparent;
+			border-radius: 4px;
+			background: transparent;
+			color: inherit;
+			font: inherit;
+			text-align: left;
+			cursor: pointer;
+		}
+
+		.log-filter-value-item:hover {
+			background: #f3f5f8;
+		}
+
+		.log-filter-value-item.selected {
+			border-color: #1769c2;
+			border-left-width: 4px;
+			padding-left: 5px;
+			background: #e6f1ff;
+			color: #0b4f99;
+			font-weight: 700;
+		}
+
+		.log-filter-value-item::after {
+			content: '';
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+		}
+
+		.log-filter-value-item.selected::after {
+			content: '\2713';
+			display: grid;
+			place-items: center;
+			background: #1769c2;
+			color: #ffffff;
+			font-size: 14px;
+			font-weight: 700;
+			line-height: 1;
+		}
+
+		.log-filter-value-item:focus-visible {
+			outline: 2px solid #2678d9;
+			outline-offset: 1px;
+		}
+
+		.log-filter-value-icon {
+			width: 32px;
+			height: 32px;
+			object-fit: contain;
+		}
+
+		.log-filter-value-label {
+			overflow-wrap: anywhere;
+		}
+
+		.log-filter-value-empty {
+			padding: 9px 8px;
+			color: #5f6673;
 		}
 
 		#driverSupport {
@@ -515,8 +616,9 @@
 					</select>
 				</div>
 				<div class="field row">
-					<label class="homey-form-label" for="logFilterValue" data-i18n="settings.logFilterValue"></label>
-					<select class="homey-form-select" id="logFilterValue" title="settings.logFilterValue" aria-label="settings.logFilterValue"></select>
+					<label class="homey-form-label" id="logFilterValueLabel" for="logFilterValue" data-i18n="settings.logFilterValue"></label>
+					<select class="log-filter-value-select" id="logFilterValue" title="settings.logFilterValue" aria-label="settings.logFilterValue" tabindex="-1"></select>
+					<div class="log-filter-value-list" id="logFilterValueList" aria-labelledby="logFilterValueLabel"></div>
 				</div>
 				<div class="log-settings-actions">
 					<button id="cancelLogSettings" class="homey-button-small" type="button" data-i18n="settings.cancel"></button>
@@ -607,6 +709,7 @@
 		var logSourceElement = document.getElementById('logSource');
 		var logFilterTypeElement = document.getElementById('logFilterType');
 		var logFilterValueElement = document.getElementById('logFilterValue');
+		var logFilterValueListElement = document.getElementById('logFilterValueList');
 		var logSettingsSummaryElement = document.getElementById('logSettingsSummary');
 		var logSettingsModalElement = document.getElementById('logSettingsModal');
 		var openLogSettingsElement = document.getElementById('openLogSettings');
@@ -1241,6 +1344,7 @@
 				typeof entry === 'string' ? { value: entry, label: entry } : entry
 			));
 			logFilterValueElement.innerHTML = '';
+			logFilterValueListElement.innerHTML = '';
 
 			if (filterType === 'none')
 			{
@@ -1249,6 +1353,10 @@
 				option.textContent = translateSetting('settings.allData', 'All data');
 				logFilterValueElement.appendChild(option);
 				logFilterValueElement.disabled = true;
+				const message = document.createElement('div');
+				message.className = 'log-filter-value-empty';
+				message.textContent = option.textContent;
+				logFilterValueListElement.appendChild(message);
 				return;
 			}
 
@@ -1260,6 +1368,10 @@
 				option.textContent = translateSetting('settings.noMatchingDevices', 'No matching devices');
 				logFilterValueElement.appendChild(option);
 				logFilterValueElement.disabled = true;
+				const message = document.createElement('div');
+				message.className = 'log-filter-value-empty';
+				message.textContent = option.textContent;
+				logFilterValueListElement.appendChild(message);
 				return;
 			}
 
@@ -1268,12 +1380,45 @@
 				const option = document.createElement('option');
 				option.value = entry.value;
 				option.textContent = entry.label;
+				option.dataset.driverId = entry.driverId || '';
 				logFilterValueElement.appendChild(option);
+
+				const item = document.createElement('button');
+				item.className = 'log-filter-value-item';
+				item.type = 'button';
+				item.dataset.value = entry.value;
+				item.setAttribute('aria-pressed', 'false');
+				const icon = createDriverSupportIcon(String(entry.driverId || '').split(':').pop(), '');
+				icon.className = 'log-filter-value-icon';
+				const label = document.createElement('span');
+				label.className = 'log-filter-value-label';
+				label.textContent = entry.label;
+				item.appendChild(icon);
+				item.appendChild(label);
+				item.addEventListener('click', function ()
+				{
+					logFilterValueElement.value = entry.value;
+					for (const candidate of logFilterValueListElement.querySelectorAll('.log-filter-value-item'))
+					{
+						const isSelected = candidate.dataset.value === entry.value;
+						candidate.classList.toggle('selected', isSelected);
+						candidate.setAttribute('aria-pressed', String(isSelected));
+					}
+				});
+				logFilterValueListElement.appendChild(item);
 			}
 
 			if (selectedValue && values.some((entry) => entry.value === selectedValue))
 			{
 				logFilterValueElement.value = selectedValue;
+			}
+
+			const selectedItem = Array.from(logFilterValueListElement.querySelectorAll('.log-filter-value-item'))
+				.find((item) => item.dataset.value === logFilterValueElement.value);
+			if (selectedItem)
+			{
+				selectedItem.classList.add('selected');
+				selectedItem.setAttribute('aria-pressed', 'true');
 			}
 		}
 
@@ -1282,11 +1427,27 @@
 			const filterSummary = logFilterTypeElement.value === 'none'
 				? translateSetting('settings.allData', 'All data')
 				: `${getSelectedText(logFilterTypeElement)}: ${getSelectedText(logFilterValueElement) || translateSetting('settings.noSelection', 'No selection')}`;
-			logSettingsSummaryElement.textContent = [
+			const summaryText = document.createElement('div');
+			summaryText.className = 'log-settings-summary-text';
+			summaryText.textContent = [
 				`${translateSetting('settings.level', 'Level')}: ${getSelectedText(logLevelElement)}`,
 				`${translateSetting('settings.source', 'Source')}: ${getSelectedText(logSourceElement)}`,
 				`${translateSetting('settings.filter', 'Filter')}: ${filterSummary}`,
 			].join('\n');
+
+			logSettingsSummaryElement.innerHTML = '';
+			const selectedOption = logFilterValueElement.options[logFilterValueElement.selectedIndex];
+			const driverId = logFilterTypeElement.value !== 'none' && selectedOption
+				? String(selectedOption.dataset.driverId || '').split(':').pop()
+				: '';
+			logSettingsSummaryElement.classList.toggle('no-icon', !driverId);
+			if (driverId)
+			{
+				const icon = createDriverSupportIcon(driverId, '');
+				icon.className = 'log-settings-summary-icon';
+				logSettingsSummaryElement.appendChild(icon);
+			}
+			logSettingsSummaryElement.appendChild(summaryText);
 		}
 
 		function loadLogSettings(callback)

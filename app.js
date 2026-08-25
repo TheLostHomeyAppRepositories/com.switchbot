@@ -1232,8 +1232,20 @@ class MyApp extends OAuth2App
 		const options = {};
 		for (const field of optionFields)
 		{
-			options[field] = Array.from(new Set(devices.map((device) => device[field]).filter(Boolean)))
-				.sort((left, right) => left.localeCompare(right));
+			const fieldOptions = new Map();
+			for (const device of devices)
+			{
+				if (device[field] && !fieldOptions.has(device[field]))
+				{
+					fieldOptions.set(device[field], {
+						value: device[field],
+						label: device[field],
+						driverId: device.driverId,
+					});
+				}
+			}
+			options[field] = Array.from(fieldOptions.values())
+				.sort((left, right) => left.label.localeCompare(right.label));
 		}
 
 		const deviceTypeOptions = new Map();
@@ -1241,10 +1253,14 @@ class MyApp extends OAuth2App
 		{
 			if (device.deviceType && !deviceTypeOptions.has(device.deviceType))
 			{
-				deviceTypeOptions.set(device.deviceType, device.driverName || device.deviceType);
+				deviceTypeOptions.set(device.deviceType, {
+					value: device.deviceType,
+					label: device.driverName || device.deviceType,
+					driverId: device.driverId,
+				});
 			}
 		}
-		options.deviceType = Array.from(deviceTypeOptions, ([value, label]) => ({ value, label }))
+		options.deviceType = Array.from(deviceTypeOptions.values())
 			.sort((left, right) => left.label.localeCompare(right.label));
 
 		return options;
@@ -3037,6 +3053,11 @@ class MyApp extends OAuth2App
 				? { ...parsedEvent.serviceData }
 				: parsedEvent.serviceData,
 		};
+		delete normalized.rssi;
+		delete normalized.id;
+		delete normalized.pid;
+		delete normalized.uuid;
+		delete normalized.address;
 
 		if (!normalized.serviceData || typeof normalized.serviceData !== 'object')
 		{
@@ -3553,8 +3574,6 @@ class MyApp extends OAuth2App
 
 	async handleBLEAdvertisement(bleId, advertisement)
 	{
-		this.updateLog(this.formatBLEAdvertisementSummary(advertisement, bleId), 2, 'ble');
-		this.updateLog(`[detailed] BLE advertisement payload received for ${bleId}: ${this.varToString(advertisement)}`, 3, 'ble');
 		const devices = this.getBLEAdvertisementDispatchDevicesForAdvertisement(bleId, advertisement);
 		if (devices.length === 0)
 		{
@@ -3580,6 +3599,10 @@ class MyApp extends OAuth2App
 			if (typeof advertisement?.rssi === 'number' && Number.isFinite(advertisement.rssi))
 			{
 				state.lastRSSI = advertisement.rssi;
+				if (device.hasCapability('rssi') && (device.getCapabilityValue('rssi') !== advertisement.rssi))
+				{
+					await device.setCapabilityValue('rssi', advertisement.rssi);
+				}
 			}
 			const payloadFingerprint = this.getBLEAdvertisementFingerprint(advertisement);
 			const previousFingerprint = state.payloadFingerprint;
@@ -3648,6 +3671,8 @@ class MyApp extends OAuth2App
 				}
 
 				state.parsedStateFingerprint = parsedStateFingerprint;
+				this.updateLog(this.formatBLEAdvertisementSummary(advertisement, bleId), 2, 'ble');
+				this.updateLog(`[detailed] BLE advertisement payload received for ${bleId}: ${this.varToString(advertisement)}`, 3, 'ble');
 				this.updateLog(`[advertisement/ble] ${this.getBLEAdvertisementWebhookSummary(device, parsedEvent, bleId)}`, 1, 'ble');
 				this.updateLog(`[detailed] Parsed BLE advertisement for ${bleId}: ${this.varToString(parsedEvent)}`, 3, 'ble');
 				await device.syncBLEEvents([parsedEvent]);
