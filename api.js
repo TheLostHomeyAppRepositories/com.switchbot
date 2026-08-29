@@ -35,9 +35,13 @@ module.exports = {
 		homey.app.clearBLEStatistics(true);
 		return 'OK';
 	},
-	async GetDriverSupportMatrix({ homey })
+	async getDetectedBLEDevices({ homey, query })
 	{
-		return homey.app.getDriverSupportMatrix();
+		return homey.app.getDetectedBLEDevices();
+	},
+	async GetDriverSupportMatrix({ homey, body })
+	{
+		return homey.app.getDriverSupportMatrix((body && body.mode) || 'hub');
 	},
 	async SendUnsupportedDevices({ homey, body })
 	{

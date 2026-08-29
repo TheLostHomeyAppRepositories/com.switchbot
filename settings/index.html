@@ -7,449 +7,7 @@
 	<title data-i18n="settings.pageTitle">SwitchBot Settings</title>
 	<link rel="stylesheet" type="text/css" href="lwsa.css">
 	<link rel="stylesheet" type="text/css" href="busy_indicator.css" />
-
-	<style type="text/css">
-		.fog_div {
-			display: none;
-			position: fixed;
-			top: 0px;
-			left: 0px;
-			height: 100%;
-			width: 100%;
-			z-index: 100;
-			background-color: rgba(30, 30, 30, 0.5);
-		}
-
-		.sim-log-tab-hidden {
-			display: none !important;
-		}
-
-		.sim-log-tab-debug {
-			display: block !important;
-		}
-
-			#statistics {
-				height: calc(100vh - 110px);
-				min-height: 280px;
-				width: 100%;
-				max-width: 100%;
-				box-sizing: border-box;
-			}
-
-			#statistics fieldset {
-				display: flex;
-				flex-direction: column;
-				height: calc(100% - 10px);
-				overflow: hidden;
-				min-height: 0;
-				min-width: 0;
-				max-width: 100%;
-				box-sizing: border-box;
-				margin: 0;
-			}
-
-			#statistics .statistics-scroll {
-				flex: 1 1 auto;
-				overflow-x: auto;
-				overflow-y: auto;
-				height: calc(100% - 24px);
-				max-height: calc(100% - 24px);
-				min-height: 340px;
-				border: 1px solid rgba(0,0,0,0.12);
-				border-radius: 4px;
-				display: block;
-				position: relative;
-				scrollbar-gutter: stable;
-				min-width: 0;
-				max-width: 100%;
-				scrollbar-width: auto;
-				box-sizing: border-box;
-				align-self: stretch;
-			}
-
-			#statistics .statistics-scroll::-webkit-scrollbar {
-				width: 15px;
-				height: 15px;
-			}
-
-			#statistics .statistics-scroll::-webkit-scrollbar-thumb {
-				background-color: rgba(74, 110, 155, 0.45);
-				border-radius: 8px;
-			}
-
-			#statistics .statistics-scroll::-webkit-scrollbar-track {
-				background: rgba(0, 0, 0, 0.05);
-			}
-
-			#bleStatisticsTable {
-				border-collapse: collapse;
-				font-size: 70%;
-				table-layout: fixed;
-				width: 700px;
-				min-width: 700px;
-			}
-
-			#bleStatisticsTable thead {
-				position: sticky;
-				top: 0;
-				z-index: 3;
-			}
-
-			#bleStatisticsTable thead th {
-				background: #edf2f8;
-				z-index: 3;
-				text-align: left;
-				border-bottom: 1px solid rgba(0,0,0,0.12);
-				padding: 6px 8px;
-			}
-
-			#bleStatisticsTable thead th.sortable {
-				cursor: pointer;
-				-webkit-user-select: none;
-				user-select: none;
-			}
-
-			#bleStatisticsTable thead tr:nth-child(2) th {
-				border-top: 1px solid rgba(0,0,0,0.12);
-			}
-
-			#bleStatisticsTable thead tr:nth-child(2) th:nth-child(9) {
-				white-space: nowrap;
-			}
-
-			#bleStatisticsTable td {
-				padding: 6px 8px;
-				background: white;
-				border-bottom: 1px solid rgba(0,0,0,0.08);
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-			}
-
-			#bleStatisticsTable td:nth-child(4) {
-				text-align: right;
-			}
-
-			#bleStatisticsTable td:nth-child(9) {
-				overflow: visible;
-				text-overflow: clip;
-			}
-
-			#bleStatisticsTable td:nth-child(4),
-			#bleStatisticsTable td:nth-child(5),
-			#bleStatisticsTable td:nth-child(6),
-			#bleStatisticsTable td:nth-child(7),
-			#bleStatisticsTable td:nth-child(8) {
-				text-align: right;
-			}
-
-		.oauth-login-button {
-			display: none;
-			background-color: #0066cc;
-		}
-
-		.debug-send-button {
-			background-color: #0f9e16;
-			color: #ffffff;
-			margin: 5px 20px 5px 5px;
-		}
-
-		.debug-clear-button {
-			background-color: #a5510d;
-			color: #ffffff;
-			margin: 5px 20px 5px 5px;
-		}
-
-		.detected-actions {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 8px;
-			align-items: center;
-		}
-
-		.auth-warning-banner {
-			display: none;
-			margin: 12px 0;
-			padding: 10px 12px;
-			border-radius: 6px;
-			border: 1px solid #f0ad4e;
-			background-color: #fff7e6;
-			color: #8a5a00;
-		}
-
-		.auth-warning-actions {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 8px;
-			margin-top: 8px;
-		}
-
-		.statistics-actions {
-			display: flex;
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 8px;
-			margin: 0 0 8px 0;
-		}
-
-		.statistics-actions p {
-			margin: 0;
-			white-space: nowrap;
-		}
-
-		.statistics-actions > div {
-			display: flex;
-			gap: 8px;
-		}
-
-		#bleStatisticsTable,
-		#bleStatisticsTable th,
-		#bleStatisticsTable td {
-			-webkit-user-select: text;
-			user-select: text;
-		}
-
-		.log-settings-bar {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			gap: 12px;
-			margin: 8px 0 12px;
-			padding: 10px 12px;
-			border: 1px solid rgba(0, 0, 0, 0.12);
-			border-radius: 6px;
-			background: #f7f8fa;
-		}
-
-		.log-settings-summary {
-			display: grid;
-			grid-template-columns: 40px minmax(0, 1fr);
-			align-items: center;
-			gap: 10px;
-			min-width: 0;
-			font-size: 90%;
-			line-height: 1.5;
-		}
-
-		.log-settings-summary.no-icon {
-			display: block;
-		}
-
-		.log-settings-summary-icon {
-			width: 40px;
-			height: 40px;
-			object-fit: contain;
-		}
-
-		.log-settings-summary-text {
-			min-width: 0;
-			white-space: pre-line;
-		}
-
-		#openLogSettings {
-			flex: 0 0 auto;
-			min-width: 112px;
-			padding: 8px 14px;
-			white-space: nowrap;
-		}
-
-		.log-settings-modal {
-			display: none;
-			position: fixed;
-			inset: 0;
-			z-index: 200;
-			align-items: center;
-			justify-content: center;
-			padding: 20px;
-			background: rgba(30, 30, 30, 0.55);
-		}
-
-		.log-settings-modal.open {
-			display: flex;
-		}
-
-		.log-settings-panel {
-			width: min(480px, 100%);
-			max-height: calc(100vh - 40px);
-			overflow-y: auto;
-			box-sizing: border-box;
-			padding: 20px;
-			border-radius: 8px;
-			background: #ffffff;
-			box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
-		}
-
-		.log-settings-panel h2 {
-			margin: 0 0 16px;
-			font-size: 20px;
-		}
-
-		.log-settings-actions {
-			display: flex;
-			justify-content: flex-end;
-			gap: 8px;
-			margin-top: 18px;
-		}
-
-		.log-filter-value-select {
-			display: none;
-		}
-
-		.log-filter-value-list {
-			display: grid;
-			gap: 4px;
-			max-height: 220px;
-			overflow-y: auto;
-			padding: 4px;
-			border: 1px solid rgba(0, 0, 0, 0.12);
-			border-radius: 6px;
-			background: #ffffff;
-		}
-
-		.log-filter-value-item {
-			display: grid;
-			grid-template-columns: 32px minmax(0, 1fr) 24px;
-			align-items: center;
-			gap: 10px;
-			width: 100%;
-			min-height: 40px;
-			padding: 4px 8px;
-			border: 1px solid transparent;
-			border-radius: 4px;
-			background: transparent;
-			color: inherit;
-			font: inherit;
-			text-align: left;
-			cursor: pointer;
-		}
-
-		.log-filter-value-item:hover {
-			background: #f3f5f8;
-		}
-
-		.log-filter-value-item.selected {
-			border-color: #1769c2;
-			border-left-width: 4px;
-			padding-left: 5px;
-			background: #e6f1ff;
-			color: #0b4f99;
-			font-weight: 700;
-		}
-
-		.log-filter-value-item::after {
-			content: '';
-			width: 20px;
-			height: 20px;
-			border-radius: 50%;
-		}
-
-		.log-filter-value-item.selected::after {
-			content: '\2713';
-			display: grid;
-			place-items: center;
-			background: #1769c2;
-			color: #ffffff;
-			font-size: 14px;
-			font-weight: 700;
-			line-height: 1;
-		}
-
-		.log-filter-value-item:focus-visible {
-			outline: 2px solid #2678d9;
-			outline-offset: 1px;
-		}
-
-		.log-filter-value-icon {
-			width: 32px;
-			height: 32px;
-			object-fit: contain;
-		}
-
-		.log-filter-value-label {
-			overflow-wrap: anywhere;
-		}
-
-		.log-filter-value-empty {
-			padding: 9px 8px;
-			color: #5f6673;
-		}
-
-		#driverSupport {
-			height: calc(100vh - 102px);
-			overflow-y: auto;
-			box-sizing: border-box;
-		}
-
-		.driver-support-summary {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-			gap: 8px;
-			margin-bottom: 12px;
-		}
-
-		.driver-support-chip,
-		.driver-support-section {
-			border: 1px solid #dce1e8;
-			border-radius: 6px;
-			background: #ffffff;
-		}
-
-		.driver-support-chip {
-			padding: 9px 10px;
-		}
-
-		.driver-support-chip-label {
-			display: block;
-			font-size: 12px;
-			color: #5f6673;
-		}
-
-		.driver-support-chip-value {
-			display: block;
-			margin-top: 3px;
-			font-size: 17px;
-			font-weight: 700;
-		}
-
-		.driver-support-section {
-			margin-bottom: 10px;
-			padding: 10px;
-			border-left-width: 4px;
-		}
-
-		.driver-support-not-installed { border-left-color: #d18400; background: #fff9ef; }
-		.driver-support-installed { border-left-color: #1d8f4d; background: #f3fbf6; }
-		.driver-support-unsupported { border-left-color: #768195; background: #f7f9fc; }
-		.driver-support-not-supportable { border-left-color: #a54646; background: #fff6f6; }
-		.driver-support-clickable { cursor: pointer; }
-
-		.driver-support-section h3 {
-			display: flex;
-			justify-content: space-between;
-			gap: 8px;
-			margin: 0 0 8px;
-			font-size: 15px;
-		}
-
-		.driver-support-group {
-			display: grid;
-			grid-template-columns: 48px 1fr;
-			gap: 10px;
-			padding-top: 8px;
-			margin-top: 8px;
-			border-top: 1px solid rgba(0, 0, 0, 0.08);
-		}
-
-		.driver-support-icon {
-			width: 48px;
-			height: 48px;
-			object-fit: contain;
-		}
-
-		.driver-support-group strong { font-size: 14px; }
-		.driver-support-list { margin: 5px 0 0; padding-left: 18px; }
-		.driver-support-list li { margin: 2px 0; font-size: 13px; }
-	</style>
+	<link rel="stylesheet" type="text/css" href="settings.css" />
 
 	<!-- The '/homey.js' script must be included in your settings view to work -->
 	<script type="text/javascript" src="/homey.js" data-origin="settings"></script>
@@ -462,16 +20,23 @@
 		<div></div>
 	</div>
 
+	<!-- Device mode switch -->
+	<div class="mode-switch">
+		<label for="modeHub"><input type="radio" name="deviceMode" id="modeHub" value="hub" checked title="settings.modeHub" aria-label="settings.modeHub" /> <span data-i18n="settings.modeHub"></span></label>
+		<label for="modeBLE"><input type="radio" name="deviceMode" id="modeBLE" value="ble" title="settings.modeBLE" aria-label="settings.modeBLE" /> <span data-i18n="settings.modeBLE"></span></label>
+	</div>
+
 	<!-- Tab links -->
 	<div class="tab">
-		<button class="tablinks" onclick="setPage(event, 'appSettings')" id="appSettingsTab" data-i18n="settings.tabAppSettings" title="settings.tabAppSettings"></button>
-		<button class="tablinks" onclick="setPage(event, 'statistics')" id="statisticsTab" data-i18n="settings.tabStatistics" title="settings.tabStatistics"></button>
-		<button class="tablinks" onclick="setPage(event, 'detected')" id="defaultOpen" data-i18n="settings.tabDetected" title="settings.tabDetected"></button>
-		<button class="tablinks" onclick="setPage(event, 'log')" data-i18n="settings.tabLog" title="settings.tabLog"></button>
-		<button class="tablinks" onclick="setPage(event, 'status')" id="deviceStatusTab" data-i18n="settings.tabGetStatus" title="settings.tabGetStatus"></button>
-		<button class="tablinks" onclick="setPage(event, 'oldSettings')" id="oldSettingsTab" data-i18n="settings.tabOldSettings" title="settings.tabOldSettings"></button>
-		<button class="tablinks" onclick="setPage(event, 'driverSupport')" id="driverSupportTab" data-i18n="settings.tabDriverSupport" title="settings.tabDriverSupport"></button>
-		<button class="tablinks sim-log-tab-hidden" onclick="setPage(event, 'simulator')" id="simLogTab" data-i18n="settings.tabSimulationData" title="settings.tabSimulationData"></button>
+		<button class="tablinks" onclick="setPage(event, 'appSettings')" id="appSettingsTab" data-mode="hub" data-i18n="settings.tabAppSettings" title="settings.tabAppSettings"></button>
+		<button class="tablinks" onclick="setPage(event, 'statistics')" id="statisticsTab" data-mode="ble" data-i18n="settings.tabStatistics" title="settings.tabStatistics"></button>
+		<button class="tablinks" onclick="setPage(event, 'detected')" id="defaultOpen" data-mode="hub" data-i18n="settings.tabDetected" title="settings.tabDetected"></button>
+		<button class="tablinks" onclick="setPage(event, 'bleDevices')" id="bleDevicesTab" data-mode="ble" data-i18n="settings.tabBLEDevices" title="settings.tabBLEDevices"></button>
+		<button class="tablinks" onclick="setPage(event, 'log')" id="logTab" data-mode="both" data-i18n="settings.tabLog" title="settings.tabLog"></button>
+		<button class="tablinks" onclick="setPage(event, 'status')" id="deviceStatusTab" data-mode="hub" data-i18n="settings.tabGetStatus" title="settings.tabGetStatus"></button>
+		<button class="tablinks" onclick="setPage(event, 'oldSettings')" id="oldSettingsTab" data-mode="hub" data-i18n="settings.tabOldSettings" title="settings.tabOldSettings"></button>
+		<button class="tablinks" onclick="setPage(event, 'driverSupport')" id="driverSupportTab" data-mode="both" data-i18n="settings.tabDriverSupport" title="settings.tabDriverSupport"></button>
+		<button class="tablinks sim-log-tab-hidden" onclick="setPage(event, 'simulator')" id="simLogTab" data-mode="both" data-i18n="settings.tabSimulationData" title="settings.tabSimulationData"></button>
 	</div>
 
 	<div id="globalAuthWarning" class="auth-warning-banner" role="alert" aria-live="polite">
@@ -507,18 +72,26 @@
 					<button id="copyBLEStatistics" class="homey-button-small" type="button" data-i18n="settings.copyTable" title="settings.copyTable"></button>
 				</div>
 			</div>
+			<div class="rssi-legend">
+				<span data-i18n="settings.rssiLegendTitle"></span>
+				<span class="rssi-legend-item rssi-poor"><span class="rssi-legend-swatch"></span><span data-i18n="settings.rssiLegendPoor"></span></span>
+				<span class="rssi-legend-item rssi-low"><span class="rssi-legend-swatch"></span><span data-i18n="settings.rssiLegendLow"></span></span>
+				<span class="rssi-legend-item rssi-ok"><span class="rssi-legend-swatch"></span><span data-i18n="settings.rssiLegendOk"></span></span>
+				<span class="rssi-legend-item rssi-good"><span class="rssi-legend-swatch"></span><span data-i18n="settings.rssiLegendGood"></span></span>
+			</div>
 			<div class="statistics-scroll" style="padding: 0;">
 				<table id="bleStatisticsTable">
 					<colgroup>
-						<col style="width: 17%;" />
 						<col style="width: 15%;" />
 						<col style="width: 15%;" />
-						<col style="width: 8%;" />
-						<col style="width: 8%;" />
-						<col style="width: 10%;" />
-						<col style="width: 8%;" />
+						<col style="width: 15%;" />
+						<col style="width: 7%;" />
+						<col style="width: 7%;" />
+						<col style="width: 9%;" />
+						<col style="width: 7%;" />
+						<col style="width: 7%;" />
 						<col style="width: 6%;" />
-						<col style="width: 12%;" />
+						<col style="width: 13%;" />
 					</colgroup>
 					<thead>
 						<tr>
@@ -528,6 +101,7 @@
 							<th colspan="2" style="text-align:center;" data-i18n="settings.serviceData"></th>
 							<th class="sortable" data-sort-key="advertisements" style="text-align:right;" data-i18n="settings.advertisements"></th>
 							<th class="sortable" data-sort-key="polls" style="text-align:right;" data-i18n="settings.polled"></th>
+							<th class="sortable" data-sort-key="errors" style="text-align:right;" data-i18n="settings.errors"></th>
 							<th class="sortable" data-sort-key="rssi" style="text-align:right;" data-i18n="settings.rssi"></th>
 							<th class="sortable" data-sort-key="lastSeenAt" data-i18n="settings.lastSeen"></th>
 						</tr>
@@ -537,6 +111,7 @@
 							<th></th>
 							<th class="sortable" data-sort-key="missing" style="text-align:right;" data-i18n="settings.missing"></th>
 							<th class="sortable" data-sort-key="present" style="text-align:right;" data-i18n="settings.present"></th>
+							<th></th>
 							<th></th>
 							<th></th>
 							<th style="text-align:right;" data-i18n="settings.dbm"></th>
@@ -552,17 +127,60 @@
 	<!-- detected-->
 	<div id="detected" class="tabcontent">
 		<fieldset>
-			<p id="oAuthStatusMessage" class="oauth-status-message">
-				<strong data-i18n="settings.oauthMissingSessionTitle"></strong> <span data-i18n="settings.oauthMissingSessionText"></span>
-			</p>
+			<div id="bleOnlyNotice" class="auth-warning-banner" role="note">
+				<span data-i18n="settings.bleOnlyDetectedNotice"></span>
+				<div class="auth-warning-actions">
+					<button id="goToStatisticsTab" class="homey-button-small" data-i18n="settings.tabBLEDevices" title="settings.tabBLEDevices"></button>
+				</div>
+			</div>
 			<p class="detected-actions">
-				<button id="loginWithOAuth" class="homey-button-small oauth-login-button" data-i18n="settings.loginWithSwitchBot" title="settings.loginWithSwitchBot"></button>
 				<button id="getDeviceLog" class="homey-button-small" data-i18n="settings.getDevices" title="settings.getDevices"></button>
 				<button id="clearDeviceLog" class="homey-button-small" data-i18n="settings.clear" title="settings.clear"></button>
 				<button id="sendDeviceLog" class="homey-button-small" data-i18n="settings.send" title="settings.send"></button>
 			</p>
 			<div class="field row">
 				<textarea id="detectedDevices" class="homey-form-textarea" wrap="off" title="settings.detectedDevices" aria-label="settings.detectedDevices"></textarea>
+			</div>
+		</fieldset>
+	</div>
+
+	<!-- BLE DEVICES PAGE -->
+	<div id="bleDevices" class="tabcontent">
+		<fieldset>
+			<div class="statistics-actions">
+				<p data-i18n="settings.bleDevicesDescription"></p>
+				<div>
+					<button id="scanForBLEDevices" class="homey-button-small" type="button" data-i18n="settings.scanForBLEDevices" title="settings.scanForBLEDevices"></button>
+					<label for="liveBLEScan"><input type="checkbox" id="liveBLEScan" title="settings.liveBLEScan" aria-label="settings.liveBLEScan" /> <span data-i18n="settings.liveBLEScan"></span></label>
+				</div>
+			</div>
+			<div class="rssi-legend">
+				<span data-i18n="settings.rssiLegendTitle"></span>
+				<span class="rssi-legend-item rssi-poor"><span class="rssi-legend-swatch"></span><span data-i18n="settings.rssiLegendPoor"></span></span>
+				<span class="rssi-legend-item rssi-low"><span class="rssi-legend-swatch"></span><span data-i18n="settings.rssiLegendLow"></span></span>
+				<span class="rssi-legend-item rssi-ok"><span class="rssi-legend-swatch"></span><span data-i18n="settings.rssiLegendOk"></span></span>
+				<span class="rssi-legend-item rssi-good"><span class="rssi-legend-swatch"></span><span data-i18n="settings.rssiLegendGood"></span></span>
+			</div>
+			<div class="statistics-scroll" style="padding: 0;">
+				<table id="bleDetectedTable">
+					<colgroup>
+						<col style="width: 24%;" />
+						<col style="width: 26%;" />
+						<col style="width: 10%;" />
+						<col style="width: 30%;" />
+						<col style="width: 10%;" />
+					</colgroup>
+					<thead>
+						<tr>
+							<th class="sortable" data-sort-key="modelName" data-i18n="settings.bleDeviceModel"></th>
+							<th class="sortable" data-sort-key="address" data-i18n="settings.mac"></th>
+							<th class="sortable" data-sort-key="rssi" style="text-align:right;" data-i18n="settings.rssi"></th>
+							<th class="sortable" data-sort-key="matchedDriverName" data-i18n="settings.bleDeviceMatchedDriver"></th>
+							<th class="sortable" data-sort-key="isInstalled" style="text-align:right;" data-i18n="settings.bleDeviceInstalled"></th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
 			</div>
 		</fieldset>
 	</div>
@@ -722,14 +340,17 @@
 		var getDeviceLogElement = document.getElementById('getDeviceLog');
 		var clearDeviceLogElement = document.getElementById('clearDeviceLog');
 		var sendDeviceLogElement = document.getElementById('sendDeviceLog');
-		var loginWithOAuthElement = document.getElementById('loginWithOAuth');
-		var oAuthStatusMessageElement = document.getElementById('oAuthStatusMessage');
+		var bleOnlyNoticeElement = document.getElementById('bleOnlyNotice');
+		var goToStatisticsTabElement = document.getElementById('goToStatisticsTab');
 		var globalAuthWarningElement = document.getElementById('globalAuthWarning');
 		var globalAuthLoginElement = document.getElementById('globalAuthLogin');
 		var globalAuthLegacyElement = document.getElementById('globalAuthLegacy');
+		var modeHubElement = document.getElementById('modeHub');
+		var modeBLEElement = document.getElementById('modeBLE');
 		var driverSupportSummaryElement = document.getElementById('driverSupportSummary');
 		var driverSupportViewElement = document.getElementById('driverSupportView');
 		var homeyInstance = null;
+		var currentTabPage = 'detected';
 
 		function translateSetting(key, fallback)
 		{
@@ -759,6 +380,7 @@
 			const headingText = document.createElement('span');
 			headingText.textContent = title;
 			const count = document.createElement('span');
+			count.className = 'driver-support-count';
 			count.textContent = items.length;
 			heading.appendChild(headingText);
 			heading.appendChild(count);
@@ -842,10 +464,14 @@
 		function appendNotSupportableSection(notSupportableDevices)
 		{
 			const section = createDriverSupportSection(
-				translateSetting('settings.driverSupportNotSupportableDevices', 'Not supportable: no status, commands, or webhooks exposed by the SwitchBot API'),
+				translateSetting('settings.driverSupportNotSupportable', 'Not supportable'),
 				notSupportableDevices,
 				'driver-support-not-supportable',
 			);
+			const description = document.createElement('p');
+			description.className = 'driver-support-section-subtitle';
+			description.textContent = translateSetting('settings.driverSupportNotSupportableDevices', 'No useful status, commands, or webhooks exposed by the SwitchBot API');
+			section.appendChild(description);
 			const list = document.createElement('ul');
 			list.className = 'driver-support-list';
 			notSupportableDevices.forEach((device) => {
@@ -936,8 +562,10 @@
 
 		function refreshDriverSupport()
 		{
+			const mode = (modeBLEElement && modeBLEElement.checked) ? 'ble' : 'hub';
+			renderDriverSupportError(translateSetting('settings.driverSupportLoading', 'Checking driver support...'));
 			waitCursor(true);
-			Homey.api('POST', '/GetDriverSupportMatrix/', {}, function (err, result)
+			Homey.api('POST', '/GetDriverSupportMatrix/', { mode }, function (err, result)
 			{
 				waitCursor(false);
 				if (err)
@@ -954,6 +582,51 @@
 			return typeof value === 'string' && value.trim().length > 0;
 		}
 
+		// Last known auth state, used to render the banner synchronously before the async check completes
+		var authWarningTabsExcluded = ['appSettings', 'log', 'statistics', 'bleDevices'];
+		var cachedHasOAuthSession = false;
+		var cachedHasLegacyAuth = false;
+		var authCacheReady = false;
+
+		function applyGlobalAuthWarningVisibility(tabPage)
+		{
+			if (!globalAuthWarningElement)
+			{
+				return;
+			}
+
+			// Driver Support is only cloud-dependent while in HUB mode
+			const isBLEDriverSupport = tabPage === 'driverSupport' && modeBLEElement && modeBLEElement.checked;
+			const shouldShowWarning = authCacheReady && !cachedHasOAuthSession && !cachedHasLegacyAuth
+				&& !authWarningTabsExcluded.includes(tabPage) && !isBLEDriverSupport;
+			globalAuthWarningElement.style.display = shouldShowWarning ? 'block' : 'none';
+		}
+
+		// Show only the tabs relevant to the selected device mode (data-mode="both" tabs are always shown)
+		function applyDeviceModeVisibility(mode)
+		{
+			const tabButtons = document.querySelectorAll('.tab .tablinks[data-mode]');
+			let activeTabIsVisible = false;
+			tabButtons.forEach((tabButton) => {
+				const tabMode = tabButton.getAttribute('data-mode');
+				const isVisible = tabMode === 'both' || tabMode === mode;
+				tabButton.classList.toggle('tablinks-mode-hidden', !isVisible);
+				if (isVisible && tabButton.classList.contains('active'))
+				{
+					activeTabIsVisible = true;
+				}
+			});
+
+			if (!activeTabIsVisible)
+			{
+				const firstVisibleTab = Array.from(tabButtons).find((tabButton) => !tabButton.classList.contains('tablinks-mode-hidden'));
+				if (firstVisibleTab)
+				{
+					firstVisibleTab.click();
+				}
+			}
+		}
+
 		function updateGlobalAuthWarning(hasOAuthSession)
 		{
 			if (!homeyInstance || !globalAuthWarningElement)
@@ -961,13 +634,15 @@
 				return;
 			}
 
+			cachedHasOAuthSession = hasOAuthSession;
+
 			homeyInstance.get('openToken', function (tokenErr, openToken)
 			{
 				homeyInstance.get('openSecret', function (secretErr, openSecret)
 				{
-					const hasLegacyAuth = hasTextValue(openToken) && hasTextValue(openSecret);
-					const shouldShowWarning = !hasOAuthSession && !hasLegacyAuth;
-					globalAuthWarningElement.style.display = shouldShowWarning ? 'block' : 'none';
+					cachedHasLegacyAuth = hasTextValue(openToken) && hasTextValue(openSecret);
+					authCacheReady = true;
+					applyGlobalAuthWarningVisibility(currentTabPage);
 
 					if (tokenErr)
 					{
@@ -985,19 +660,17 @@
 		{
 			if (hasOAuthSession)
 			{
-				oAuthStatusMessageElement.style.display = 'none';
-				loginWithOAuthElement.style.display = 'none';
 				getDeviceLogElement.style.display = 'inline-block';
 				clearDeviceLogElement.style.display = 'inline-block';
 				sendDeviceLogElement.style.display = 'inline-block';
+				bleOnlyNoticeElement.style.display = 'none';
 			}
 			else
 			{
-				oAuthStatusMessageElement.style.display = 'block';
-				loginWithOAuthElement.style.display = 'inline-block';
 				getDeviceLogElement.style.display = 'none';
 				clearDeviceLogElement.style.display = 'none';
 				sendDeviceLogElement.style.display = 'none';
+				bleOnlyNoticeElement.style.display = 'block';
 			}
 
 			updateGlobalAuthWarning(hasOAuthSession);
@@ -1029,6 +702,16 @@
 		var bleStatisticsRefreshTimer = null;
 		var bleStatisticsSort = {
 			key: 'name',
+			direction: 'asc',
+		};
+
+		var bleDetectedTableElement = document.getElementById('bleDetectedTable');
+		var scanForBLEDevicesElement = document.getElementById('scanForBLEDevices');
+		var liveBLEScanElement = document.getElementById('liveBLEScan');
+		var bleDetectedDevicesTimer = null;
+		var bleDetectedDevicesRows = [];
+		var bleDetectedDevicesSort = {
+			key: 'modelName',
 			direction: 'asc',
 		};
 
@@ -1112,6 +795,98 @@
 			});
 
 			updateBLEStatisticsSortIndicators();
+
+			bleStatisticsTableElement.addEventListener('click', function (event)
+			{
+				const cell = event.target.closest('td.ble-error-count');
+				if (!cell)
+				{
+					return;
+				}
+
+				const lastError = cell.getAttribute('data-last-error') || '';
+				Homey.alert(lastError || translateSetting('settings.noErrorRecorded', 'No error recorded'));
+			});
+		}
+
+		function compareDetectedBLEDevicesRows(left, right, key, direction)
+		{
+			const factor = direction === 'desc' ? -1 : 1;
+			if (key === 'rssi')
+			{
+				const leftValue = (typeof left.rssi === 'number' && Number.isFinite(left.rssi)) ? left.rssi : -Infinity;
+				const rightValue = (typeof right.rssi === 'number' && Number.isFinite(right.rssi)) ? right.rssi : -Infinity;
+				return (leftValue - rightValue) * factor;
+			}
+
+			if (key === 'isInstalled')
+			{
+				return ((left.isInstalled ? 1 : 0) - (right.isInstalled ? 1 : 0)) * factor;
+			}
+
+			const leftText = String((left && left[key]) || '').toLowerCase();
+			const rightText = String((right && right[key]) || '').toLowerCase();
+			return leftText.localeCompare(rightText) * factor;
+		}
+
+		function updateDetectedBLEDevicesSortIndicators()
+		{
+			const headers = bleDetectedTableElement
+				? bleDetectedTableElement.querySelectorAll('thead th.sortable[data-sort-key]')
+				: [];
+
+			headers.forEach((header) => {
+				const sortKey = header.getAttribute('data-sort-key');
+				const baseLabel = header.getAttribute('data-base-label') || header.textContent.replace(/\s*[▲▼]$/, '');
+				header.setAttribute('data-base-label', baseLabel);
+				if (sortKey === bleDetectedDevicesSort.key)
+				{
+					header.textContent = `${baseLabel} ${bleDetectedDevicesSort.direction === 'asc' ? '▲' : '▼'}`;
+				}
+				else
+				{
+					header.textContent = baseLabel;
+				}
+			});
+		}
+
+		function setDetectedBLEDevicesSort(sortKey)
+		{
+			if (!sortKey)
+			{
+				return;
+			}
+
+			if (bleDetectedDevicesSort.key === sortKey)
+			{
+				bleDetectedDevicesSort.direction = bleDetectedDevicesSort.direction === 'asc' ? 'desc' : 'asc';
+			}
+			else
+			{
+				bleDetectedDevicesSort.key = sortKey;
+				bleDetectedDevicesSort.direction = 'asc';
+			}
+
+			updateDetectedBLEDevicesSortIndicators();
+			renderDetectedBLEDevices(bleDetectedDevicesRows);
+		}
+
+		function initializeDetectedBLEDevicesSorting()
+		{
+			if (!bleDetectedTableElement)
+			{
+				return;
+			}
+
+			const headers = bleDetectedTableElement.querySelectorAll('thead th.sortable[data-sort-key]');
+			headers.forEach((header) => {
+				header.addEventListener('click', function ()
+				{
+					setDetectedBLEDevicesSort(header.getAttribute('data-sort-key'));
+				});
+			});
+
+			updateDetectedBLEDevicesSortIndicators();
 		}
 
 		function getBLEStatisticsClipboardText()
@@ -1125,6 +900,7 @@
 				translateSetting('settings.present', 'Present'),
 				translateSetting('settings.advertisements', 'Advertisements'),
 				translateSetting('settings.polled', 'Polled'),
+				translateSetting('settings.errors', 'Errors'),
 				translateSetting('settings.rssiDbm', 'RSSI (dBm)'),
 				translateSetting('settings.lastSeenElapsed', 'Last Seen (HH:MM:SS ago)'),
 			].join('\t'));
@@ -1139,7 +915,7 @@
 			for (const row of bodyRows)
 			{
 				const cells = Array.from(row.querySelectorAll('td'));
-				if (cells.length < 9)
+				if (cells.length < 10)
 				{
 					continue;
 				}
@@ -1220,6 +996,18 @@
 			});
 		}
 
+		function getRSSIQualityClass(rssi)
+		{
+			if (typeof rssi !== 'number' || !Number.isFinite(rssi))
+			{
+				return '';
+			}
+			if (rssi >= -60) return 'rssi-good';
+			if (rssi >= -75) return 'rssi-ok';
+			if (rssi >= -90) return 'rssi-low';
+			return 'rssi-poor';
+		}
+
 		function renderBLEStatistics(rows)
 		{
 			const formatElapsedSince = (lastSeenAt) => {
@@ -1244,7 +1032,7 @@
 
 			if (!Array.isArray(rows) || rows.length === 0)
 			{
-				tbody.innerHTML = `<tr><td colspan="9" style="padding:8px;">${translateSetting('settings.noBleDevices', 'No BLE devices registered.')}</td></tr>`;
+				tbody.innerHTML = `<tr><td colspan="10" style="padding:8px;">${translateSetting('settings.noBleDevices', 'No BLE devices registered.')}</td></tr>`;
 				return;
 			}
 
@@ -1255,18 +1043,27 @@
 			tbody.innerHTML = sortedRows.map((row) => {
 				const lastSeenText = formatElapsedSince(row.lastSeenAt);
 				const rssiText = (typeof row.rssi === 'number' && Number.isFinite(row.rssi)) ? String(Math.round(row.rssi)) : '-';
+				const rssiClass = getRSSIQualityClass(row.rssi);
 				const macText = (row.mac || '').replace(/[<>]/g, '');
+				const macClass = row.viaBLEHub ? 'ble-hub-source' : '';
+				const macTitle = row.viaBLEHub ? translateSetting('settings.bleHubSourceTitle', 'Relayed via ESP32 BLE Hub') : '';
 				const driverText = (row.driverType || '').replace(/[<>]/g, '');
+				const naText = (value) => (row.viaBLEHub && !Number(value || 0)) ? '-' : String(Number(value || 0));
+				const errorsCount = Number(row.errors || 0);
+				const lastErrorText = row.lastError ? String(row.lastError).replace(/[<>]/g, '').replace(/"/g, '&quot;') : '';
+				const errorCellClass = errorsCount > 0 ? 'ble-error-count' : '';
+				const errorCellTitle = errorsCount > 0 ? translateSetting('settings.clickToViewError', 'Click to view last error') : '';
 				return `
 					<tr>
 						<td style="padding:6px 8px;">${(row.name || translateSetting('settings.unknown', 'Unknown')).replace(/[<>]/g, '')}</td>
-						<td style="padding:6px 8px;">${macText}</td>
+						<td class="${macClass}" title="${macTitle}" style="padding:6px 8px;">${macText}</td>
 						<td style="padding:6px 8px;">${driverText}</td>
-						<td style="padding:6px 8px; text-align:right;">${Number(row.missing || 0)}</td>
-						<td style="padding:6px 8px; text-align:right;">${Number(row.present || 0)}</td>
-						<td style="padding:6px 8px; text-align:right;">${Number(row.advertisements || 0)}</td>
-						<td style="padding:6px 8px; text-align:right;">${Number(row.polls || 0)}</td>
-						<td style="padding:6px 8px; text-align:right;">${rssiText}</td>
+						<td style="padding:6px 8px; text-align:right;">${naText(row.missing)}</td>
+						<td style="padding:6px 8px; text-align:right;">${naText(row.present)}</td>
+						<td style="padding:6px 8px; text-align:right;">${naText(row.advertisements)}</td>
+						<td style="padding:6px 8px; text-align:right;">${naText(row.polls)}</td>
+						<td class="${errorCellClass}" data-last-error="${lastErrorText}" title="${errorCellTitle}" style="padding:6px 8px; text-align:right;">${errorsCount > 0 ? errorsCount : naText(row.errors)}</td>
+						<td class="${rssiClass}" style="padding:6px 8px; text-align:right;">${rssiText}</td>
 						<td style="padding:6px 8px; text-align:left;">${lastSeenText}</td>
 					</tr>
 				`;
@@ -1284,6 +1081,76 @@
 				}
 
 				renderBLEStatistics(Array.isArray(result) ? result : []);
+			});
+		}
+
+		function renderDetectedBLEDevices(rows)
+		{
+			const tbody = bleDetectedTableElement && bleDetectedTableElement.querySelector('tbody');
+			if (!tbody)
+			{
+				return;
+			}
+
+			bleDetectedDevicesRows = Array.isArray(rows) ? rows : [];
+
+			if (bleDetectedDevicesRows.length === 0)
+			{
+				tbody.innerHTML = `<tr><td colspan="5" style="padding:8px;">${translateSetting('settings.noBLEDevicesDetected', 'No BLE devices detected yet. Click Scan Now to search.')}</td></tr>`;
+				return;
+			}
+
+			const sortedRows = bleDetectedDevicesRows
+				.slice()
+				.sort((left, right) => compareDetectedBLEDevicesRows(left, right, bleDetectedDevicesSort.key, bleDetectedDevicesSort.direction));
+
+			tbody.innerHTML = sortedRows.map((row) => {
+				const modelName = String(row.modelName || row.model || translateSetting('settings.unknown', 'Unknown')).replace(/[<>]/g, '');
+				const address = String(row.address || '').replace(/[<>]/g, '');
+				const addressClass = row.viaBLEHub ? 'ble-hub-source' : '';
+				const rssiText = (typeof row.rssi === 'number' && Number.isFinite(row.rssi)) ? String(row.rssi) : '-';
+				const rssiClass = getRSSIQualityClass(row.rssi);
+				const driverText = row.matchedDriverName
+					? String(row.matchedDriverName).replace(/[<>]/g, '')
+					: translateSetting('settings.bleDeviceUnsupported', 'Unsupported');
+				const installedText = row.isInstalled
+					? translateSetting('settings.yes', 'Yes')
+					: translateSetting('settings.no', 'No');
+				return `
+					<tr>
+						<td>${modelName}</td>
+						<td class="${addressClass}" title="${row.viaBLEHub ? translateSetting('settings.bleHubSourceTitle', 'Relayed via ESP32 BLE Hub') : ''}">${address}</td>
+						<td class="${rssiClass}" style="text-align:right;">${rssiText}</td>
+						<td>${driverText}</td>
+						<td style="text-align:right;">${installedText}</td>
+					</tr>
+				`;
+			}).join('');
+		}
+
+		function refreshDetectedBLEDevices()
+		{
+			if (scanForBLEDevicesElement)
+			{
+				scanForBLEDevicesElement.disabled = true;
+				scanForBLEDevicesElement.textContent = translateSetting('settings.scanningBLEDevices', 'Scanning...');
+			}
+
+			Homey.api('GET', '/getDetectedBLEDevices/', {}, function (err, result)
+			{
+				if (scanForBLEDevicesElement)
+				{
+					scanForBLEDevicesElement.disabled = false;
+					scanForBLEDevicesElement.textContent = translateSetting('settings.scanForBLEDevices', 'Scan Now');
+				}
+
+				if (err)
+				{
+					console.error('BLE device scan failed:', err);
+					return;
+				}
+
+				renderDetectedBLEDevices(Array.isArray(result) ? result : []);
 			});
 		}
 
@@ -1550,6 +1417,7 @@
 			// Tell Homey we're ready to be displayed
 			Homey.ready();
 			initializeBLEStatisticsSorting();
+			initializeDetectedBLEDevicesSorting();
 
 			// Ensure placeholder accessibility labels are localized at runtime.
 			localizeA11yPlaceholders();
@@ -1563,7 +1431,41 @@
 				document.getElementById('simLogTab').classList.toggle('sim-log-tab-debug', debugMode === true);
 			});
 
-			document.getElementById("defaultOpen").click();
+			modeHubElement.addEventListener('change', function ()
+			{
+				if (modeHubElement.checked)
+				{
+					Homey.set('deviceMode', 'hub');
+					applyDeviceModeVisibility('hub');
+					applyGlobalAuthWarningVisibility(currentTabPage);
+					if (currentTabPage === 'driverSupport')
+					{
+						refreshDriverSupport();
+					}
+				}
+			});
+
+			modeBLEElement.addEventListener('change', function ()
+			{
+				if (modeBLEElement.checked)
+				{
+					Homey.set('deviceMode', 'ble');
+					applyDeviceModeVisibility('ble');
+					applyGlobalAuthWarningVisibility(currentTabPage);
+					if (currentTabPage === 'driverSupport')
+					{
+						refreshDriverSupport();
+					}
+				}
+			});
+
+			Homey.get('deviceMode', function (err, deviceMode)
+			{
+				const mode = (!err && deviceMode === 'ble') ? 'ble' : 'hub';
+				(mode === 'ble' ? modeBLEElement : modeHubElement).checked = true;
+				document.getElementById(mode === 'ble' ? 'bleDevicesTab' : 'defaultOpen').click();
+				applyDeviceModeVisibility(mode);
+			});
 			refreshBLEStatistics();
 			if (bleStatisticsRefreshTimer)
 			{
@@ -1584,6 +1486,32 @@
 				clearBLEStatisticsElement.addEventListener('click', function ()
 				{
 					clearBLEStatistics();
+				});
+			}
+
+			if (scanForBLEDevicesElement)
+			{
+				scanForBLEDevicesElement.addEventListener('click', function ()
+				{
+					refreshDetectedBLEDevices();
+				});
+			}
+
+			if (liveBLEScanElement)
+			{
+				liveBLEScanElement.addEventListener('change', function ()
+				{
+					if (bleDetectedDevicesTimer)
+					{
+						clearInterval(bleDetectedDevicesTimer);
+						bleDetectedDevicesTimer = null;
+					}
+
+					if (liveBLEScanElement.checked)
+					{
+						refreshDetectedBLEDevices();
+						bleDetectedDevicesTimer = setInterval(refreshDetectedBLEDevices, 15000);
+					}
 				});
 			}
 
@@ -1656,7 +1584,7 @@
 				}
 			});
 
-			loginWithOAuthElement.addEventListener('click', function (e)
+			globalAuthLoginElement.addEventListener('click', function ()
 			{
 				waitCursor(true);
 				Homey.api('GET', '/startOAuth2Flow/', {}, function (err, result)
@@ -1695,14 +1623,20 @@
 				});
 			});
 
-			globalAuthLoginElement.addEventListener('click', function ()
-			{
-				loginWithOAuthElement.click();
-			});
-
 			globalAuthLegacyElement.addEventListener('click', function ()
 			{
+				modeHubElement.checked = true;
+				Homey.set('deviceMode', 'hub');
+				applyDeviceModeVisibility('hub');
 				document.getElementById('oldSettingsTab').click();
+			});
+
+			goToStatisticsTabElement.addEventListener('click', function ()
+			{
+				modeBLEElement.checked = true;
+				Homey.set('deviceMode', 'ble');
+				applyDeviceModeVisibility('ble');
+				document.getElementById('bleDevicesTab').click();
 			});
 
 			getDeviceLogElement.addEventListener('click', function (e)
@@ -1713,8 +1647,7 @@
 					if (err || (result && !result.hasOAuthSession))
 					{
 						Homey.alert(t('settings.oauthLoginRequiredFirst', 'Please log in with your SwitchBot account first by clicking the Login with SwitchBot Account button.'));
-						oAuthStatusMessageElement.style.display = 'block';
-						loginWithOAuthElement.style.display = 'block';
+						globalAuthWarningElement.style.display = 'block';
 						return;
 					}
 
@@ -1967,6 +1900,18 @@
 		{
 			var i, tabcontent, tablinks;
 
+			currentTabPage = tabPage;
+
+			// Only scan for BLE devices while that tab is actually visible
+			if (bleDetectedDevicesTimer)
+			{
+				clearInterval(bleDetectedDevicesTimer);
+				bleDetectedDevicesTimer = null;
+			}
+
+			// Decide the banner's visibility from the cached auth state before the tab is drawn, so it never flashes
+			applyGlobalAuthWarningVisibility(tabPage);
+
 			// Get all elements with class="tabcontent" and hide them
 			tabcontent = document.getElementsByClassName("tabcontent");
 			for (i = 0; i < tabcontent.length; i++)
@@ -2042,9 +1987,22 @@
 			{
 				refreshBLEStatistics();
 			}
+			else if (tabPage == 'bleDevices')
+			{
+				refreshDetectedBLEDevices();
+				if (liveBLEScanElement && liveBLEScanElement.checked)
+				{
+					bleDetectedDevicesTimer = setInterval(refreshDetectedBLEDevices, 15000);
+				}
+			}
 			else if (tabPage == 'driverSupport')
 			{
 				refreshDriverSupport();
+			}
+
+			if (homeyInstance)
+			{
+				checkOAuthStatus(homeyInstance);
 			}
 		}
 

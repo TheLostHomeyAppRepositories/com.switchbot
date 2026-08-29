@@ -1,6 +1,6 @@
 {
 	"id": "com.switchbot",
-	"version": "2.0.90",
+	"version": "2.0.91",
 	"compatibility": ">=12.2.0",
 	"platforms": [
 		"local",
@@ -556,6 +556,10 @@
 		"clearBLEStatistics": {
 			"method": "post",
 			"path": "/clearBLEStatistics/"
+		},
+		"getDetectedBLEDevices": {
+			"method": "get",
+			"path": "/getDetectedBLEDevices/"
 		},
 		"GetDriverSupportMatrix": {
 			"method": "post",

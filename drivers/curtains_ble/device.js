@@ -391,6 +391,7 @@ class CurtainsBLEDevice extends Homey.Device
 				if (!bleAdvertisement)
 				{
 					this.homey.app.updateLog(`BLE device ${name} not found`, 'ble');
+					this.homey.app.markBLEPollServiceData(this, false);
 					return;
 				}
 

@@ -1456,5 +1456,17 @@
 		"pl": "Napraw awarię podczas sprawdzania obsługi reklam BLE na starszych Homeys. Zaktualizowano strony ustawień aplikacji, w tym opcję określania filtrów dla danych do rejestrowania.",
 		"ru": "Исправить сбой при проверке поддержки рекламы BLE на старых Homeys. Обновлены страницы настроек приложения, включая опцию указания фильтров для данных, которые будут регистрироваться.",
 		"ko": "이전 Homeys에서 BLE 광고 지원을 확인할 때 충돌을 수정했습니다. 기록할 데이터를 필터링하는 옵션을 포함하여 앱 설정 페이지를 업데이트했습니다."
-	}
+	},
+	"2.0.91": {
+		"en": "Updated BLE polling.",
+		"no": "Oppdatert BLE-avspørring.",
+		"nl": "Bijgewerkte BLE-polling.",
+		"de": "Aktualisierte BLE-Abfrage.",
+		"fr": "Mise à jour de l'interrogation BLE.",
+		"es": "Actualización de la sondeo BLE.",
+		"pt": "Atualização da sondagem BLE.",
+		"it": "Aggiornamento del polling BLE.",
+		"pl": "Zaktualizowano sondowanie BLE.",
+		"ru": "Обновлено опрос BLE.",
+		"ko": "BLE 폴링 업데이트."
 }
