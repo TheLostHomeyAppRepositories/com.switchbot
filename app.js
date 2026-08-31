@@ -32,6 +32,13 @@ const DETECTED_BLE_DEVICE_STALE_MS = 5 * 60 * 1000;
 // An active advertisement monitor stops homey.ble.discover()/find() returning service data for the
 // device it covers, which breaks the polling fallback, so subscriptions default to off.
 const BLE_ADVERTISEMENT_SUBSCRIPTIONS_DEFAULT = false;
+// Background scan that keeps a running list of every SwitchBot device seen since startup.
+const BLE_DISCOVERY_CACHE_INTERVAL_MS = 60000;
+const BLE_DISCOVERY_CACHE_SCAN_MS = 6000;
+const BLE_DISCOVERY_CACHE_START_DELAY_MS = 2000;
+// The drivers may not be loaded when the first attempt runs, so retry before declaring BLE ready.
+const BLE_DISCOVERY_CACHE_RETRY_MS = 3000;
+const BLE_DISCOVERY_CACHE_MAX_INITIAL_ATTEMPTS = 10;
 const HUB_POLL_MISSING_AUTH_INTERVAL_MS = 60000;
 const WEBHOOK_AUTH_MISSING_INTERVAL_MS = 5 * 60 * 1000;
 // Device types whose official API matrix has no Status, Command, or Webhook support.
@@ -616,6 +623,18 @@ class MyApp extends OAuth2App
 		this.blePollingFallbackDevices = new Set();
 		this.bleRegisteredDevices = new Set();
 		this.bleDiscoverUnavailableLogged = false;
+		// Running list of every SwitchBot device seen since startup; entries are never removed.
+		this.bleDeviceCache = new Map();
+		this.detectedBLEDevicesCache = [];
+		this.allDetectedBLEDevicesCache = [];
+		this.bleDiscoveryCacheTimer = null;
+		this.initialBLEDiscoveryDone = false;
+		this.initialBLEDiscoveryAttempts = 0;
+		this.initialBLEDiscoveryResolve = null;
+		this.initialBLEDiscoveryPromise = new Promise((resolve) =>
+		{
+			this.initialBLEDiscoveryResolve = resolve;
+		});
 		if (!hasHomeyFeatureApi)
 		{
 			this.updateLog('Homey runtime has no hasFeature API, using polling fallback', 1, 'ble');
@@ -635,6 +654,8 @@ class MyApp extends OAuth2App
 
 		// Webhook registration backoff tracking
 		this.webhookRetryCount = 0;
+
+		this.startBLEDiscoveryCache();
 
 		// Track in-progress OAuth flows started from settings
 		this.settingsOAuthFlows = {};
@@ -1134,6 +1155,12 @@ class MyApp extends OAuth2App
 		{
 			this.homey.clearTimeout(this.bleTimerID);
 			this.bleTimerID = null;
+		}
+
+		if (this.bleDiscoveryCacheTimer)
+		{
+			this.homey.clearTimeout(this.bleDiscoveryCacheTimer);
+			this.bleDiscoveryCacheTimer = null;
 		}
 
 		await this.unregisterAllBLEAdvertisementSubscriptions();
@@ -3271,7 +3298,10 @@ class MyApp extends OAuth2App
 			return;
 		}
 
-		this.registerBLEAdvertisementSubscription(device)
+		// Wait for the startup discovery so a monitor is never created before the radio has produced
+		// a clean device list.
+		this.whenInitialBLEDiscoveryComplete()
+			.then(() => this.registerBLEAdvertisementSubscription(device))
 			.catch((err) =>
 			{
 				const name = (device.getName && typeof device.getName === 'function') ? device.getName() : 'Unknown BLE device';
@@ -3941,6 +3971,209 @@ class MyApp extends OAuth2App
 		};
 	}
 
+	isBLEInitialising()
+	{
+		return !this.initialBLEDiscoveryDone;
+	}
+
+	// Resolves once the startup discovery has run, so advertisement monitors are never created
+	// before the radio has produced a clean list of nearby devices.
+	whenInitialBLEDiscoveryComplete()
+	{
+		return this.initialBLEDiscoveryPromise || Promise.resolve();
+	}
+
+	startBLEDiscoveryCache()
+	{
+		if (this.bleDiscoveryCacheTimer)
+		{
+			return;
+		}
+
+		this.bleDiscoveryCacheTimer = this.homey.setTimeout(() => this.onBLEDiscoveryCacheTick(), BLE_DISCOVERY_CACHE_START_DELAY_MS);
+	}
+
+	async onBLEDiscoveryCacheTick()
+	{
+		this.bleDiscoveryCacheTimer = null;
+
+		let scanRan = false;
+		try
+		{
+			scanRan = await this.refreshBLEDeviceCache();
+		}
+		catch (err)
+		{
+			this.updateLog(`BLE discovery cache refresh failed: ${err.message}`, 1, 'ble');
+		}
+
+		// Drivers may not be loaded yet, or the radio may be busy; keep retrying quickly so the
+		// initial cache is never left empty, but give up eventually rather than blocking forever.
+		if (!this.initialBLEDiscoveryDone && !scanRan
+			&& (this.initialBLEDiscoveryAttempts < BLE_DISCOVERY_CACHE_MAX_INITIAL_ATTEMPTS))
+		{
+			this.initialBLEDiscoveryAttempts++;
+			this.updateLog(`BLE discovery cache not ready, retry ${this.initialBLEDiscoveryAttempts}/${BLE_DISCOVERY_CACHE_MAX_INITIAL_ATTEMPTS}`, 2, 'ble');
+			this.bleDiscoveryCacheTimer = this.homey.setTimeout(() => this.onBLEDiscoveryCacheTick(), BLE_DISCOVERY_CACHE_RETRY_MS);
+			return;
+		}
+
+		this.initialBLEDiscoveryDone = true;
+		if (this.initialBLEDiscoveryResolve)
+		{
+			const resolveInitial = this.initialBLEDiscoveryResolve;
+			this.initialBLEDiscoveryResolve = null;
+			resolveInitial();
+		}
+
+		this.bleDiscoveryCacheTimer = this.homey.setTimeout(() => this.onBLEDiscoveryCacheTick(), BLE_DISCOVERY_CACHE_INTERVAL_MS);
+	}
+
+	// Let the settings page reflect background radio activity on its Scan button.
+	emitBLEScanState(scanning)
+	{
+		this.homey.api.realtime('com.switchbot.bleScanState', { scanning: Boolean(scanning) })
+			.catch((err) => this.updateLog(`BLE scan state update failed: ${err.message}`, 3, 'ble'));
+	}
+
+	// Merge a fresh scan into the cache. Devices are only ever added or refreshed, never dropped,
+	// so a device that misses a scan window stays available for pairing.
+	async refreshBLEDeviceCache()
+	{
+		if (!this.homey.ble || (typeof this.homey.ble.discover !== 'function'))
+		{
+			return false;
+		}
+
+		const runtimeDrivers = this.homey.drivers && typeof this.homey.drivers.getDrivers === 'function'
+			? this.homey.drivers.getDrivers()
+			: {};
+		const parserDriver = Object.values(runtimeDrivers || {}).find((driver) => typeof driver.parse === 'function');
+		if (!parserDriver)
+		{
+			this.updateLog('BLE discovery cache refresh skipped: no BLE driver loaded yet', 2, 'ble');
+			return false;
+		}
+
+		let waited = 0;
+		while ((this.bleBusy || this.bleDiscovery) && (waited < 10000))
+		{
+			await this.Delay(250);
+			waited += 250;
+		}
+
+		if (this.bleBusy || this.bleDiscovery)
+		{
+			this.updateLog('BLE discovery cache refresh skipped: radio busy', 2, 'ble');
+			return false;
+		}
+
+		this.bleBusy = true;
+		let added = 0;
+		let refreshed = 0;
+		try
+		{
+			const advertisements = await this.homey.ble.discover([], BLE_DISCOVERY_CACHE_SCAN_MS);
+			for (const advertisement of advertisements || [])
+			{
+				try
+				{
+					const deviceData = parserDriver.parse(advertisement);
+					if (!deviceData || !deviceData.serviceData || !deviceData.serviceData.model)
+					{
+						continue;
+					}
+
+					const address = this.normalizeBLEAdvertisementId(advertisement.address || deviceData.address);
+					if (!address)
+					{
+						continue;
+					}
+
+					if (this.bleDeviceCache.has(address))
+					{
+						refreshed++;
+					}
+					else
+					{
+						added++;
+					}
+
+					this.bleDeviceCache.set(address, {
+						id: deviceData.id || address.replace(/:/g, ''),
+						pid: deviceData.pid || deviceData.id || address.replace(/:/g, ''),
+						address,
+						model: String(deviceData.serviceData.model),
+						modelName: String(deviceData.serviceData.modelName || deviceData.serviceData.model),
+						rssi: (typeof advertisement.rssi === 'number' && Number.isFinite(advertisement.rssi)) ? Math.round(advertisement.rssi) : null,
+						lastSeenAt: Date.now(),
+					});
+				}
+				catch (parseErr)
+				{
+					this.updateLog(`BLE discovery cache parse error for ${advertisement && advertisement.address}: ${parseErr.message}`, 3, 'ble');
+				}
+			}
+		}
+		finally
+		{
+			this.bleBusy = false;
+		}
+
+		this.updateLog(`BLE discovery cache: ${added} new, ${refreshed} refreshed, ${this.bleDeviceCache.size} total`, 1, 'ble');
+
+		if ((added > 0) || (refreshed > 0))
+		{
+			this.detectedBLEDevicesCache = this.buildDetectedBLEDeviceRowsFromCache();
+			this.homey.api.realtime('com.switchbot.bleDevicesUpdated', { devices: this.detectedBLEDevicesCache })
+				.catch((err) => this.updateLog(`BLE devices realtime update failed: ${err.message}`, 2, 'ble'));
+		}
+
+		return true;
+	}
+
+	getCachedBLEDevices(type = null)
+	{
+		const rows = Array.from((this.bleDeviceCache || new Map()).values());
+		if (!type)
+		{
+			return rows;
+		}
+
+		return rows.filter((row) => row.model === type);
+	}
+
+	// Settings-table rows built purely from the background discovery cache, for when a scan can't run.
+	buildDetectedBLEDeviceRowsFromCache()
+	{
+		const runtimeDrivers = this.homey.drivers && typeof this.homey.drivers.getDrivers === 'function'
+			? this.homey.drivers.getDrivers()
+			: {};
+		const results = new Map();
+		for (const cached of (this.bleDeviceCache || new Map()).values())
+		{
+			this.addDetectedBLEDevice(
+				results,
+				runtimeDrivers,
+				cached.address,
+				{ model: cached.model, modelName: cached.modelName },
+				cached.rssi,
+			);
+		}
+
+		// Keep the BLE-hub flag a real scan may have established for these addresses.
+		for (const previousRow of this.detectedBLEDevicesCache || [])
+		{
+			if (previousRow && previousRow.viaBLEHub && results.has(previousRow.address))
+			{
+				results.get(previousRow.address).viaBLEHub = true;
+			}
+		}
+
+		return Array.from(results.values())
+			.sort((a, b) => a.modelName.localeCompare(b.modelName) || a.address.localeCompare(b.address));
+	}
+
 	getAllDetectedBLEDevices()
 	{
 		return this.allDetectedBLEDevicesCache || [];
@@ -3955,6 +4188,9 @@ class MyApp extends OAuth2App
 	// Actively scan for nearby SwitchBot BLE advertisements, independent of any cloud account or paired devices.
 	async getDetectedBLEDevices(scanDurationMs = 8000)
 	{
+		// The startup discovery owns the radio first; joining in would only fight it for airtime.
+		await this.whenInitialBLEDiscoveryComplete();
+
 		// The radio may be briefly busy with the regular maintenance poll; wait a bit rather than
 		// immediately falling back to a stale/empty cache for this user-triggered scan.
 		let waited = 0;
@@ -3968,7 +4204,12 @@ class MyApp extends OAuth2App
 		{
 			// Still busy (e.g. pairing scan in progress); return the last known results instead of colliding with it.
 			this.updateLog('getDetectedBLEDevices skipped: BLE radio busy, returning cached results', 1, 'ble');
-			return this.detectedBLEDevicesCache || [];
+			if (this.detectedBLEDevicesCache && this.detectedBLEDevicesCache.length > 0)
+			{
+				return this.detectedBLEDevicesCache;
+			}
+
+			return this.buildDetectedBLEDeviceRowsFromCache();
 		}
 
 		// Give the maintenance poll a moment to release the radio before claiming it, so its in-flight
@@ -4010,8 +4251,20 @@ class MyApp extends OAuth2App
 			}
 		}
 
-		// Seed with recently-seen devices so a device that was recognised in a previous scan doesn't
-		// vanish just because this particular scan window missed its service-data advertisement.
+		// Seed from the background discovery cache first; it never forgets a device, so the list
+		// cannot empty out just because one scan window came back quiet.
+		for (const cached of (this.bleDeviceCache || new Map()).values())
+		{
+			this.addDetectedBLEDevice(
+				results,
+				runtimeDrivers,
+				cached.address,
+				{ model: cached.model, modelName: cached.modelName },
+				cached.rssi,
+			);
+		}
+
+		// Then overlay the previous scan's rows, which carry fresher RSSI and BLE-hub flags.
 		const nowMs = Date.now();
 		for (const cachedRow of this.detectedBLEDevicesCache || [])
 		{
@@ -4113,6 +4366,14 @@ class MyApp extends OAuth2App
 
 		const rows = Array.from(results.values()).sort((a, b) => a.modelName.localeCompare(b.modelName) || a.address.localeCompare(b.address));
 		this.updateLog(`getDetectedBLEDevices found ${rows.length} recognisable device(s)`, 1, 'ble');
+
+		// A quiet scan must never wipe a list we already had; keep the previous rows instead.
+		if ((rows.length === 0) && this.detectedBLEDevicesCache && (this.detectedBLEDevicesCache.length > 0))
+		{
+			this.updateLog('getDetectedBLEDevices found nothing, keeping previous results', 1, 'ble');
+			return this.detectedBLEDevicesCache;
+		}
+
 		this.detectedBLEDevicesCache = rows;
 
 		if (recordAll)

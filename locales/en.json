@@ -136,6 +136,7 @@
 		"bleDeviceInstalled": "Installed",
 		"bleDeviceUnsupported": "Unsupported",
 		"noBLEDevicesDetected": "No BLE devices detected yet. Click Scan Now to search.",
+		"bleInitialising": "Waiting for BLE to initialise...",
 		"bleHubSourceTitle": "Relayed via ESP32 BLE Hub",
 		"recordAllBLEDevices": "Record all devices",
 		"allBLEDevicesDescription": "Every BLE advertisement seen during a scan, including devices that could not be added to the list above. The Reason column shows why each one was rejected.",

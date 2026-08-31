@@ -22,6 +22,9 @@ class BLEDriver extends Homey.Driver
 
 	async getBLEDevices(type)
 	{
+		// Wait before claiming the radio, otherwise the startup discovery cannot run.
+		await this.homey.app.whenInitialBLEDiscoveryComplete();
+
 		this.homey.app.bleDiscovery = true;
 		this.homey.app.updateLog('BLE Discovery started', 'ble');
 		this.homey.app.detectedDevices = '';
@@ -81,50 +84,35 @@ class BLEDriver extends Homey.Driver
 				await this.homey.app.Delay(500);
 			}
 
-			const bleAdvertisements = await this.homey.ble.discover([], 5000);
-			this.homey.app.updateLog(`BLE Discovery found: ${this.homey.app.varToString(bleAdvertisements)}`, 3, 'ble');
+			// Use the app's background discovery cache rather than scanning again, so devices that
+			// were seen since startup are offered even if they miss this moment's advertisement.
+			const cachedDevices = this.homey.app.getCachedBLEDevices(type);
+			this.homey.app.updateLog(`BLE Discovery using cache: ${cachedDevices.length} device(s) of type ${type}`, 2, 'ble');
 
-			this.homey.app.detectedDevices += '\r\nBLE Hub Found device:\r\n';
-			this.homey.app.detectedDevices += this.homey.app.varToString(bleAdvertisements);
+			this.homey.app.detectedDevices += '\r\nBLE cached devices:\r\n';
+			this.homey.app.detectedDevices += this.homey.app.varToString(cachedDevices);
 			this.homey.api.realtime('com.switchbot.detectedDevicesUpdated', { devices: this.homey.app.detectedDevices }).catch(this.error);
 
-			for (const bleAdvertisement of bleAdvertisements)
+			for (const cachedDevice of cachedDevices)
 			{
 				try
 				{
-					const deviceData = this.parse(bleAdvertisement);
-					if (deviceData)
-					{
-						if (deviceData.serviceData.model === type)
+					const lcAddress = cachedDevice.address.toLowerCase();
+					const device = {
+						name: lcAddress,
+						data:
 						{
-							if (bleAdvertisement.address)
-							{
-								const lcAddress = bleAdvertisement.address.toLowerCase();
-								const device = {
-									name: lcAddress,
-									data:
-									{
-										id: deviceData.id,
-										pid: deviceData.pid,
-										address: lcAddress,
-										model: deviceData.serviceData.model,
-										modelName: deviceData.serviceData.modelName,
-									},
-								};
+							id: cachedDevice.id,
+							pid: cachedDevice.pid,
+							address: lcAddress,
+							model: cachedDevice.model,
+							modelName: cachedDevice.modelName,
+						},
+					};
 
-								this.homey.app.detectedDevices += '\r\nBLE Homey Found device:\r\n';
-								this.homey.app.detectedDevices += this.homey.app.varToString(device);
-								if (this.homey.app.BLEHub)
-								{
-									this.homey.api.realtime('com.switchbot.detectedDevicesUpdated', { devices: this.homey.app.detectedDevices });
-								}
-
-								if (this.checkExist(devices, device) < 0)
-								{
-									devices.push(device);
-								}
-							}
-						}
+					if (this.checkExist(devices, device) < 0)
+					{
+						devices.push(device);
 					}
 				}
 				catch (err)

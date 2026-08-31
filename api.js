@@ -37,7 +37,12 @@ module.exports = {
 	},
 	async getDetectedBLEDevices({ homey, query })
 	{
-		return homey.app.getDetectedBLEDevices();
+		if (homey.app.isBLEInitialising())
+		{
+			return { initialising: true, devices: [] };
+		}
+
+		return { initialising: false, devices: await homey.app.getDetectedBLEDevices() };
 	},
 	async getAllDetectedBLEDevices({ homey, query })
 	{
