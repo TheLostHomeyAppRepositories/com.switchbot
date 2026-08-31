@@ -39,6 +39,19 @@ module.exports = {
 	{
 		return homey.app.getDetectedBLEDevices();
 	},
+	async getAllDetectedBLEDevices({ homey, query })
+	{
+		return homey.app.getAllDetectedBLEDevices();
+	},
+	async getBLEAdvertisementSettings({ homey, query })
+	{
+		return homey.app.getBLEAdvertisementSettings();
+	},
+	async clearAllDetectedBLEDevices({ homey, query })
+	{
+		homey.app.clearAllDetectedBLEDevices();
+		return 'OK';
+	},
 	async GetDriverSupportMatrix({ homey, body })
 	{
 		return homey.app.getDriverSupportMatrix((body && body.mode) || 'hub');

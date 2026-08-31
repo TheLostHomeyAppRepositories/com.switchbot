@@ -32,6 +32,7 @@
 		<button class="tablinks" onclick="setPage(event, 'statistics')" id="statisticsTab" data-mode="ble" data-i18n="settings.tabStatistics" title="settings.tabStatistics"></button>
 		<button class="tablinks" onclick="setPage(event, 'detected')" id="defaultOpen" data-mode="hub" data-i18n="settings.tabDetected" title="settings.tabDetected"></button>
 		<button class="tablinks" onclick="setPage(event, 'bleDevices')" id="bleDevicesTab" data-mode="ble" data-i18n="settings.tabBLEDevices" title="settings.tabBLEDevices"></button>
+		<button class="tablinks" onclick="setPage(event, 'bleSettings')" id="bleSettingsTab" data-mode="ble" data-i18n="settings.tabBLESettings" title="settings.tabBLESettings"></button>
 		<button class="tablinks" onclick="setPage(event, 'log')" id="logTab" data-mode="both" data-i18n="settings.tabLog" title="settings.tabLog"></button>
 		<button class="tablinks" onclick="setPage(event, 'status')" id="deviceStatusTab" data-mode="hub" data-i18n="settings.tabGetStatus" title="settings.tabGetStatus"></button>
 		<button class="tablinks" onclick="setPage(event, 'oldSettings')" id="oldSettingsTab" data-mode="hub" data-i18n="settings.tabOldSettings" title="settings.tabOldSettings"></button>
@@ -152,6 +153,7 @@
 				<div>
 					<button id="scanForBLEDevices" class="homey-button-small" type="button" data-i18n="settings.scanForBLEDevices" title="settings.scanForBLEDevices"></button>
 					<label for="liveBLEScan"><input type="checkbox" id="liveBLEScan" title="settings.liveBLEScan" aria-label="settings.liveBLEScan" /> <span data-i18n="settings.liveBLEScan"></span></label>
+					<label for="recordAllBLEDevices"><input type="checkbox" id="recordAllBLEDevices" title="settings.recordAllBLEDevices" aria-label="settings.recordAllBLEDevices" /> <span data-i18n="settings.recordAllBLEDevices"></span></label>
 				</div>
 			</div>
 			<div class="rssi-legend">
@@ -182,6 +184,58 @@
 					<tbody></tbody>
 				</table>
 			</div>
+
+			<div id="allBLEDevicesSection" class="all-ble-section">
+				<div class="statistics-actions">
+					<p data-i18n="settings.allBLEDevicesDescription"></p>
+					<div>
+						<button id="clearAllBLEDevices" class="homey-button-small" type="button" data-i18n="settings.clearRecordedDevices" title="settings.clearRecordedDevices"></button>
+						<button id="copyAllBLEDevices" class="homey-button-small" type="button" data-i18n="settings.copyTable" title="settings.copyTable"></button>
+					</div>
+				</div>
+				<div class="statistics-scroll">
+					<table id="allBLEDevicesTable">
+						<colgroup>
+							<col style="width: 23%;" />
+							<col style="width: 19%;" />
+							<col style="width: 8%;" />
+							<col style="width: 9%;" />
+							<col style="width: 8%;" />
+							<col style="width: 11%;" />
+							<col style="width: 14%;" />
+							<col style="width: 8%;" />
+						</colgroup>
+						<thead>
+							<tr>
+								<th class="sortable" data-sort-key="address" data-i18n="settings.mac"></th>
+								<th class="sortable" data-sort-key="localName" data-i18n="settings.bleLocalName"></th>
+								<th class="sortable" data-sort-key="rssi" style="text-align:right;" data-i18n="settings.rssi"></th>
+								<th class="sortable" data-sort-key="isSwitchBot" data-i18n="settings.bleIsSwitchBot"></th>
+								<th class="sortable" data-sort-key="isInstalled" data-i18n="settings.blePaired"></th>
+								<th class="sortable" data-sort-key="subscribed" data-i18n="settings.bleSubscribed"></th>
+								<th class="sortable" data-sort-key="reason" data-i18n="settings.bleRecordReason"></th>
+								<th class="sortable" data-sort-key="seenCount" style="text-align:right;" data-i18n="settings.bleSeenCount"></th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</fieldset>
+	</div>
+
+	<!-- BLE SETTINGS PAGE -->
+	<div id="bleSettings" class="tabcontent">
+		<fieldset>
+			<p data-i18n="settings.bleSettingsDescription"></p>
+			<div class="field row">
+				<label for="bleAdvertisementsEnabled">
+					<input type="checkbox" id="bleAdvertisementsEnabled" title="settings.bleAdvertisementsEnabled" aria-label="settings.bleAdvertisementsEnabled" />
+					<span data-i18n="settings.bleAdvertisementsEnabled"></span>
+				</label>
+			</div>
+			<p class="ble-settings-hint" data-i18n="settings.bleAdvertisementsHint"></p>
+			<p id="bleAdvertisementsStatus" class="ble-settings-status"></p>
 		</fieldset>
 	</div>
 
@@ -715,6 +769,54 @@
 			direction: 'asc',
 		};
 
+		var allBLEDevicesTableElement = document.getElementById('allBLEDevicesTable');
+		var allBLEDevicesSectionElement = document.getElementById('allBLEDevicesSection');
+		var recordAllBLEDevicesElement = document.getElementById('recordAllBLEDevices');
+		var copyAllBLEDevicesElement = document.getElementById('copyAllBLEDevices');
+		var clearAllBLEDevicesElement = document.getElementById('clearAllBLEDevices');
+		var allBLEDevicesRows = [];
+		var allBLEDevicesSort = {
+			key: 'address',
+			direction: 'asc',
+		};
+
+		var bleAdvertisementsEnabledElement = document.getElementById('bleAdvertisementsEnabled');
+		var bleAdvertisementsStatusElement = document.getElementById('bleAdvertisementsStatus');
+
+		function refreshBLEAdvertisementSettings()
+		{
+			Homey.api('GET', '/getBLEAdvertisementSettings/', {}, function (err, result)
+			{
+				if (err || !result)
+				{
+					console.error('Failed to read BLE advertisement settings:', err);
+					return;
+				}
+
+				if (bleAdvertisementsEnabledElement)
+				{
+					bleAdvertisementsEnabledElement.checked = Boolean(result.enabled) && Boolean(result.featureAvailable);
+					bleAdvertisementsEnabledElement.disabled = !result.featureAvailable;
+				}
+
+				if (bleAdvertisementsStatusElement)
+				{
+					if (!result.featureAvailable)
+					{
+						bleAdvertisementsStatusElement.textContent = translateSetting('settings.bleAdvertisementsUnsupported', 'This Homey does not support BLE advertisement subscriptions.');
+					}
+					else if (result.enabled)
+					{
+						bleAdvertisementsStatusElement.textContent = `${translateSetting('settings.bleAdvertisementsActive', 'Active subscriptions')}: ${Number(result.activeSubscriptions || 0)}`;
+					}
+					else
+					{
+						bleAdvertisementsStatusElement.textContent = translateSetting('settings.bleAdvertisementsPolling', 'Using polling for all BLE devices.');
+					}
+				}
+			});
+		}
+
 		function compareBLEStatisticsRows(left, right, key, direction)
 		{
 			const factor = direction === 'desc' ? -1 : 1;
@@ -887,6 +989,284 @@
 			});
 
 			updateDetectedBLEDevicesSortIndicators();
+		}
+
+		function getAllBLEDeviceServiceDataText(row)
+		{
+			return (row && Array.isArray(row.serviceData) ? row.serviceData : [])
+				.map((entry) => `${entry.uuid}: ${entry.data}`)
+				.join(' | ');
+		}
+
+		function compareAllBLEDevicesRows(left, right, key, direction)
+		{
+			const factor = direction === 'desc' ? -1 : 1;
+			if (key === 'rssi' || key === 'seenCount')
+			{
+				const leftValue = (typeof left[key] === 'number' && Number.isFinite(left[key])) ? left[key] : -Infinity;
+				const rightValue = (typeof right[key] === 'number' && Number.isFinite(right[key])) ? right[key] : -Infinity;
+				return (leftValue - rightValue) * factor;
+			}
+
+			if (key === 'isSwitchBot')
+			{
+				return ((left.isSwitchBot ? 1 : 0) - (right.isSwitchBot ? 1 : 0)) * factor;
+			}
+
+			if (key === 'isInstalled' || key === 'subscribed')
+			{
+				return ((left[key] ? 1 : 0) - (right[key] ? 1 : 0)) * factor;
+			}
+
+			const leftText = String((key === 'serviceDataText' ? getAllBLEDeviceServiceDataText(left) : left[key]) || '').toLowerCase();
+			const rightText = String((key === 'serviceDataText' ? getAllBLEDeviceServiceDataText(right) : right[key]) || '').toLowerCase();
+			return leftText.localeCompare(rightText) * factor;
+		}
+
+		function updateAllBLEDevicesSortIndicators()
+		{
+			const headers = allBLEDevicesTableElement
+				? allBLEDevicesTableElement.querySelectorAll('thead th.sortable[data-sort-key]')
+				: [];
+
+			headers.forEach((header) => {
+				const sortKey = header.getAttribute('data-sort-key');
+				const baseLabel = header.getAttribute('data-base-label') || header.textContent.replace(/\s*[▲▼]$/, '');
+				header.setAttribute('data-base-label', baseLabel);
+				if (sortKey === allBLEDevicesSort.key)
+				{
+					header.textContent = `${baseLabel} ${allBLEDevicesSort.direction === 'asc' ? '▲' : '▼'}`;
+				}
+				else
+				{
+					header.textContent = baseLabel;
+				}
+			});
+		}
+
+		function initializeAllBLEDevicesSorting()
+		{
+			if (!allBLEDevicesTableElement)
+			{
+				return;
+			}
+
+			const headers = allBLEDevicesTableElement.querySelectorAll('thead th.sortable[data-sort-key]');
+			headers.forEach((header) => {
+				header.addEventListener('click', function ()
+				{
+					const sortKey = header.getAttribute('data-sort-key');
+					if (!sortKey)
+					{
+						return;
+					}
+
+					if (allBLEDevicesSort.key === sortKey)
+					{
+						allBLEDevicesSort.direction = allBLEDevicesSort.direction === 'asc' ? 'desc' : 'asc';
+					}
+					else
+					{
+						allBLEDevicesSort.key = sortKey;
+						allBLEDevicesSort.direction = 'asc';
+					}
+
+					updateAllBLEDevicesSortIndicators();
+					renderAllBLEDevices(allBLEDevicesRows);
+				});
+			});
+
+			updateAllBLEDevicesSortIndicators();
+		}
+
+		function renderAllBLEDevices(rows)
+		{
+			const tbody = allBLEDevicesTableElement && allBLEDevicesTableElement.querySelector('tbody');
+			if (!tbody)
+			{
+				return;
+			}
+
+			allBLEDevicesRows = Array.isArray(rows) ? rows : [];
+
+			if (allBLEDevicesRows.length === 0)
+			{
+				tbody.innerHTML = `<tr><td colspan="8" style="padding:8px;">${translateSetting('settings.noAllBLEDevicesRecorded', 'No devices recorded yet. Run a scan with recording enabled.')}</td></tr>`;
+				return;
+			}
+
+			const sortedRows = allBLEDevicesRows
+				.slice()
+				.sort((left, right) => compareAllBLEDevicesRows(left, right, allBLEDevicesSort.key, allBLEDevicesSort.direction));
+
+			const sanitize = (value) => String(value || '').replace(/[<>]/g, '');
+			const spaceHex = (hex) => String(hex || '').replace(/(.{2})/g, '$1 ').trim();
+
+			tbody.innerHTML = sortedRows.map((row) => {
+				const address = sanitize(row.address);
+				const localName = sanitize(row.localName) || '-';
+				const rssiText = (typeof row.rssi === 'number' && Number.isFinite(row.rssi)) ? String(row.rssi) : '-';
+				const rssiClass = getRSSIQualityClass(row.rssi);
+				const switchBotText = row.isSwitchBot
+					? translateSetting('settings.yes', 'Yes')
+					: translateSetting('settings.no', 'No');
+				const reasonText = sanitize(row.reason) || '-';
+				const serviceParts = (Array.isArray(row.serviceData) ? row.serviceData : [])
+					.map((entry) => `${sanitize(entry.uuid)}: ${spaceHex(sanitize(entry.data))}`)
+					.join('<br />') || '-';
+				const manufacturerText = spaceHex(sanitize(row.manufacturerData)) || '-';
+				const modelText = row.modelName
+					? `${sanitize(row.modelName)} (${sanitize(row.model)})`
+					: '';
+				const driverText = row.matchedDriverName ? sanitize(row.matchedDriverName) : '';
+				const extraParts = [];
+				if (modelText)
+				{
+					extraParts.push(`<span class="ble-raw-label">${translateSetting('settings.bleDeviceModel', 'Model')}:</span> ${modelText}`);
+				}
+				if (driverText)
+				{
+					extraParts.push(`<span class="ble-raw-label">${translateSetting('settings.bleDeviceMatchedDriver', 'Matched Driver')}:</span> ${driverText}`);
+				}
+				const extraText = extraParts.length ? `${extraParts.join(' &nbsp; ')}<br />` : '';
+				const withCount = Number(row.withServiceDataCount || 0);
+				const withoutCount = Number(row.withoutServiceDataCount || 0);
+				const seenTitle = `${translateSetting('settings.bleServiceData', 'Service Data')}: ${withCount} / ${withCount + withoutCount}`;
+				const pairedText = row.isInstalled
+					? translateSetting('settings.yes', 'Yes')
+					: translateSetting('settings.no', 'No');
+				const subscribedText = row.subscribed
+					? translateSetting('settings.yes', 'Yes')
+					: translateSetting('settings.no', 'No');
+				return `
+					<tr class="${row.isSwitchBot ? '' : 'ble-not-switchbot'}">
+						<td>${address}</td>
+						<td>${localName}</td>
+						<td class="${rssiClass}" style="text-align:right;">${rssiText}</td>
+						<td>${switchBotText}</td>
+						<td title="${sanitize(row.pairedName)}">${pairedText}</td>
+						<td>${subscribedText}</td>
+						<td title="${reasonText}">${reasonText}</td>
+						<td style="text-align:right;" title="${seenTitle}">${withCount}/${withCount + withoutCount}</td>
+					</tr>
+					<tr>
+						<td class="ble-raw" colspan="8">
+							${extraText}<span class="ble-raw-label">${translateSetting('settings.bleServiceData', 'Service Data')}:</span> ${serviceParts}<br />
+							<span class="ble-raw-label">${translateSetting('settings.bleManufacturerData', 'Manufacturer Data')}:</span> ${manufacturerText}
+						</td>
+					</tr>
+				`;
+			}).join('');
+		}
+
+		function refreshAllBLEDevices()
+		{
+			if (!recordAllBLEDevicesElement || !recordAllBLEDevicesElement.checked)
+			{
+				return;
+			}
+
+			Homey.api('GET', '/getAllDetectedBLEDevices/', {}, function (err, result)
+			{
+				if (err)
+				{
+					console.error('Failed to load recorded BLE devices:', err);
+					return;
+				}
+
+				renderAllBLEDevices(Array.isArray(result) ? result : []);
+			});
+		}
+
+		async function copyAllBLEDevicesToClipboard()
+		{
+			const header = ['MAC', 'Local name', 'RSSI', 'SwitchBot', 'Address type', 'Connectable', 'Service UUIDs', 'Service data', 'Manufacturer data', 'Model', 'Model name', 'Driver', 'Installed', 'Paired name', 'Subscribed', 'Reason', 'Seen count', 'With service data', 'Without service data', 'First seen', 'Last seen'];
+			const lines = [header.join('\t')];
+			for (const row of allBLEDevicesRows)
+			{
+				lines.push([
+					row.address || '',
+					row.localName || '',
+					(typeof row.rssi === 'number' && Number.isFinite(row.rssi)) ? row.rssi : '',
+					row.isSwitchBot ? 'yes' : 'no',
+					row.addressType || '',
+					row.connectable ? 'yes' : 'no',
+					(Array.isArray(row.serviceUuids) ? row.serviceUuids.join(' ') : ''),
+					getAllBLEDeviceServiceDataText(row),
+					row.manufacturerData || '',
+					row.model || '',
+					row.modelName || '',
+					row.matchedDriverName || '',
+					row.isInstalled ? 'yes' : 'no',
+					row.pairedName || '',
+					row.subscribed ? 'yes' : 'no',
+					row.reason || '',
+					Number(row.seenCount || 0),
+					Number(row.withServiceDataCount || 0),
+					Number(row.withoutServiceDataCount || 0),
+					row.firstSeenAt ? new Date(row.firstSeenAt).toISOString() : '',
+					row.lastSeenAt ? new Date(row.lastSeenAt).toISOString() : '',
+				].join('\t'));
+			}
+
+			const text = lines.join('\n');
+			try
+			{
+				if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function')
+				{
+					await navigator.clipboard.writeText(text);
+				}
+				else
+				{
+					throw new Error('Clipboard API unavailable');
+				}
+
+				if (homeyInstance)
+				{
+					homeyInstance.alert(translateSetting('settings.recordedDevicesCopied', 'Recorded devices table copied to clipboard.'));
+				}
+			}
+			catch (err)
+			{
+				const fallbackArea = document.createElement('textarea');
+				fallbackArea.value = text;
+				fallbackArea.setAttribute('readonly', 'readonly');
+				fallbackArea.style.position = 'fixed';
+				fallbackArea.style.top = '-1000px';
+				document.body.appendChild(fallbackArea);
+				fallbackArea.select();
+				fallbackArea.setSelectionRange(0, fallbackArea.value.length);
+
+				const copied = document.execCommand('copy');
+				document.body.removeChild(fallbackArea);
+
+				if (homeyInstance)
+				{
+					homeyInstance.alert(copied
+						? translateSetting('settings.recordedDevicesCopied', 'Recorded devices table copied to clipboard.')
+						: translateSetting('settings.statisticsCopyFailed', 'Could not copy automatically. Please select and copy the table manually.'));
+				}
+			}
+		}
+
+		function setAllBLEDevicesVisibility()
+		{
+			const isEnabled = Boolean(recordAllBLEDevicesElement && recordAllBLEDevicesElement.checked);
+			if (allBLEDevicesSectionElement)
+			{
+				allBLEDevicesSectionElement.classList.toggle('is-visible', isEnabled);
+			}
+
+			const bleDevicesTab = document.getElementById('bleDevices');
+			if (bleDevicesTab)
+			{
+				bleDevicesTab.classList.toggle('is-recording-all', isEnabled);
+			}
+
+			if (isEnabled)
+			{
+				refreshAllBLEDevices();
+			}
 		}
 
 		function getBLEStatisticsClipboardText()
@@ -1151,6 +1531,7 @@
 				}
 
 				renderDetectedBLEDevices(Array.isArray(result) ? result : []);
+				refreshAllBLEDevices();
 			});
 		}
 
@@ -1418,6 +1799,7 @@
 			Homey.ready();
 			initializeBLEStatisticsSorting();
 			initializeDetectedBLEDevicesSorting();
+			initializeAllBLEDevicesSorting();
 
 			// Ensure placeholder accessibility labels are localized at runtime.
 			localizeA11yPlaceholders();
@@ -1512,6 +1894,75 @@
 						refreshDetectedBLEDevices();
 						bleDetectedDevicesTimer = setInterval(refreshDetectedBLEDevices, 15000);
 					}
+				});
+			}
+
+			if (recordAllBLEDevicesElement)
+			{
+				Homey.get('recordAllBLEDevices', function (err, recordAll)
+				{
+					if (!err)
+					{
+						recordAllBLEDevicesElement.checked = Boolean(recordAll);
+					}
+
+					setAllBLEDevicesVisibility();
+				});
+
+				recordAllBLEDevicesElement.addEventListener('change', function ()
+				{
+					Homey.set('recordAllBLEDevices', recordAllBLEDevicesElement.checked, function (err)
+					{
+						if (err)
+						{
+							Homey.alert(err);
+						}
+					});
+
+					setAllBLEDevicesVisibility();
+				});
+			}
+
+			if (copyAllBLEDevicesElement)
+			{
+				copyAllBLEDevicesElement.addEventListener('click', function ()
+				{
+					copyAllBLEDevicesToClipboard();
+				});
+			}
+
+			if (bleAdvertisementsEnabledElement)
+			{
+				bleAdvertisementsEnabledElement.addEventListener('change', function ()
+				{
+					// The app subscribes/unsubscribes every registered BLE device when this changes.
+					bleAdvertisementsEnabledElement.disabled = true;
+					Homey.set('bleAdvertisementsEnabled', bleAdvertisementsEnabledElement.checked, function (err)
+					{
+						if (err)
+						{
+							Homey.alert(err);
+						}
+
+						setTimeout(refreshBLEAdvertisementSettings, 1500);
+					});
+				});
+			}
+
+			if (clearAllBLEDevicesElement)
+			{
+				clearAllBLEDevicesElement.addEventListener('click', function ()
+				{
+					Homey.api('POST', '/clearAllDetectedBLEDevices/', {}, function (err)
+					{
+						if (err)
+						{
+							Homey.alert(err);
+							return;
+						}
+
+						renderAllBLEDevices([]);
+					});
 				});
 			}
 
@@ -1994,6 +2445,10 @@
 				{
 					bleDetectedDevicesTimer = setInterval(refreshDetectedBLEDevices, 15000);
 				}
+			}
+			else if (tabPage == 'bleSettings')
+			{
+				refreshBLEAdvertisementSettings();
 			}
 			else if (tabPage == 'driverSupport')
 			{

@@ -352,6 +352,92 @@ body {
 	font-weight: 700;
 }
 
+/* Two stacked tables share the Devices tab, so they size to content instead of each claiming full height. */
+#bleDevices .statistics-scroll {
+	height: auto;
+	max-height: 520px;
+	border: 1px solid rgba(0,0,0,0.12);
+	border-radius: 4px;
+}
+
+/* Split the available height once the recorded-devices table is shown below. */
+#bleDevices.is-recording-all .statistics-scroll {
+	max-height: 260px;
+}
+
+.ble-settings-hint {
+	color: #667;
+	font-size: 90%;
+	margin: 4px 0 12px;
+}
+
+.ble-settings-status {
+	font-weight: 600;
+}
+
+.all-ble-section {
+	display: none;
+	margin-top: 16px;
+	border-top: 1px solid rgba(0,0,0,0.12);
+	padding-top: 12px;
+}
+
+.all-ble-section.is-visible {
+	display: block;
+}
+
+#allBLEDevicesTable {
+	border-collapse: collapse;
+	font-size: 70%;
+	table-layout: fixed;
+	width: 480px;
+	min-width: 480px;
+}
+
+#allBLEDevicesTable thead th {
+	background: #edf2f8;
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	text-align: left;
+	border-bottom: 1px solid rgba(0,0,0,0.12);
+	padding: 6px 8px;
+}
+
+#allBLEDevicesTable thead th.sortable {
+	cursor: pointer;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#allBLEDevicesTable td {
+	padding: 6px 8px;
+	background: white;
+	border-bottom: none;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#allBLEDevicesTable td.ble-raw {
+	white-space: normal;
+	word-break: break-all;
+	font-family: monospace;
+	font-size: 95%;
+	color: #556;
+	padding: 0 8px 6px;
+	border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+#allBLEDevicesTable td.ble-raw .ble-raw-label {
+	color: #889;
+	font-family: inherit;
+}
+
+#allBLEDevicesTable tr.ble-not-switchbot td {
+	opacity: 0.65;
+}
+
 .log-settings-bar {
 	display: flex;
 	align-items: center;

@@ -562,6 +562,18 @@
       "method": "get",
       "path": "/getDetectedBLEDevices/"
     },
+    "getAllDetectedBLEDevices": {
+      "method": "get",
+      "path": "/getAllDetectedBLEDevices/"
+    },
+    "getBLEAdvertisementSettings": {
+      "method": "get",
+      "path": "/getBLEAdvertisementSettings/"
+    },
+    "clearAllDetectedBLEDevices": {
+      "method": "post",
+      "path": "/clearAllDetectedBLEDevices/"
+    },
     "GetDriverSupportMatrix": {
       "method": "post",
       "path": "/GetDriverSupportMatrix/"
