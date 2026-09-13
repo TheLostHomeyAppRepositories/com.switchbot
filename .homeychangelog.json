@@ -1482,5 +1482,18 @@
 		"pl": "Dodano obsługę Lock Pro Matter Enabled(HUB).",
 		"ru": "Добавлена поддержка Lock Pro Matter Enabled(HUB).",
 		"ko": "Lock Pro Matter Enabled(HUB)에 대한 지원이 추가되었습니다."
+	},
+	"2.0.93": {
+		"en": " Fix for the Lock Pro Matter Enabled(HUB) driver thinking it needed a hub",
+		"no": "Fiks for Lock Pro Matter Enabled(HUB)-driveren som trodde den trengte en hub.",
+		"nl": "Opgelost voor de Lock Pro Matter Enabled(HUB)-driver die dacht dat hij een hub nodig had.",
+		"de": "Fix für den Lock Pro Matter Enabled(HUB)-Treiber, der dachte, er benötige ein Hub.",
+		"fr": "Correction pour le pilote Lock Pro Matter Enabled(HUB) qui pensait qu'il avait besoin d'un hub.",
+		"es": "Corrección para el controlador Lock Pro Matter Enabled(HUB) que pensaba que necesitaba un hub.",
+		"pt": "Correção para o driver Lock Pro Matter Enabled(HUB) que pensava que precisava de um hub.",
+		"it": "Correzione per il driver Lock Pro Matter Enabled(HUB) che pensava di aver bisogno di un hub.",
+		"pl": "Poprawka dla sterownika Lock Pro Matter Enabled(HUB), który myślał, że potrzebuje huba.",
+		"ru": "Исправление для драйвера Lock Pro Matter Enabled(HUB), который думал, что ему нужен хаб.",
+		"ko": "허브가 필요하다고 생각한 Lock Pro Matter Enabled(HUB) 드라이버 수정."
 	}
 }

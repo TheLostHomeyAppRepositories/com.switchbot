@@ -12,6 +12,11 @@ class LockProMatterHubDriver extends LockAdvancedHubDriver
 		return ['Smart Lock Pro Wifi'];
 	}
 
+	requiresHub()
+	{
+		return false;
+	}
+
 }
 
 module.exports = LockProMatterHubDriver;
