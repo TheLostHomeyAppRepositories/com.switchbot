@@ -98,12 +98,13 @@ class ContactHubDevice extends HubDevice
 		}
 	}
 
-	async pollHubDeviceValues()
-	{
-		// The webhook is only triggerd for the door contact so we need polling for the motion and bright state
-		await this.getHubDeviceValues();
-		return true;
-	}
+	// No need to poll for hub device values as the webhook will handle updates
+	// async pollHubDeviceValues()
+	// {
+	// 	// The webhook is only triggerd for the door contact so we need polling for the motion and bright state
+	// 	await this.getHubDeviceValues();
+	// 	return true;
+	// }
 
 	async processWebhookMessage(message)
 	{

@@ -1495,5 +1495,18 @@
 		"pl": "Poprawka dla sterownika Lock Pro Matter Enabled(HUB), który myślał, że potrzebuje huba.",
 		"ru": "Исправление для драйвера Lock Pro Matter Enabled(HUB), который думал, что ему нужен хаб.",
 		"ko": "허브가 필요하다고 생각한 Lock Pro Matter Enabled(HUB) 드라이버 수정."
+	},
+	"2.0.94": {
+		"en": "No need to poll for hub contact sensor values as the webhook will handle updates.",
+		"no": "Ingen behov for å spørre etter hub-kontaktsensorverdier da webhooken vil håndtere oppdateringer.",
+		"nl": "Geen noodzaak om te poll voor hub-contactsensorwaarden aangezien de webhook de updates zal afhandelen.",
+		"de": "Keine Notwendigkeit, nach Hub-Kontaktsensorwerten zu fragen, da das Webhook die Updates übernimmt.",
+		"fr": "Pas besoin de sonder les valeurs du capteur de contact du hub car le webhook gérera les mises à jour.",
+		"es": "No es necesario sondear los valores del sensor de contacto del hub ya que el webhook manejará las actualizaciones.",
+		"pt": "Não há necessidade de sondar os valores do sensor de contato do hub, pois o webhook lidará com as atualizações.",
+		"it": "Non è necessario eseguire il polling dei valori del sensore di contatto hub poiché il webhook gestirà gli aggiornamenti.",
+		"pl": "Nie ma potrzeby sondowania wartości czujnika kontaktu huba, ponieważ webhook obsłuży aktualizacje.",
+		"ru": "Нет необходимости опрашивать значения датчика контакта хаба, так как веб-хук будет обрабатывать обновления.",
+		"ko": "허브 접촉 센서 값을 폴링할 필요가 없습니다. 웹훅이 업데이트를 처리합니다."
 	}
 }
